@@ -143,8 +143,9 @@ class StereoVisionCalculator(object):
 
         return f_mm, f_pixel
 
-    def _baselineCalculator(self, min_disparity_measured, max_depth,
-                            max_depth_error, disparity_range, focal_length):
+    def _baselineCalculator(self, focal_length, max_depth, max_depth_error,
+                            max_disparity, calibration_disparity_error,
+                            min_disparity):
         """
         Function to calculate the baseline of the stereo camera given:
         :param: min_disparity_measured: The least measurable disparity of the
@@ -157,17 +158,12 @@ class StereoVisionCalculator(object):
             maximum disparity becomes min_disparity_measured + disparity_range
         :param: focal_length: The focal length of the system in terms of pixels
         """
-        baseline = (min_disparity_measured *
+        baseline = ((min_disparity + calibration_disparity_error) *
                     (max_depth + max_depth_error)) / focal_length
 
-        min_depth = (baseline * focal_length) / (min_disparity_measured +
-                                                 disparity_range)
+        min_depth = (baseline * focal_length) / max_disparity
 
-        min_disparity_real = baseline * focal_length / max_depth
-
-        max_disparity_error = min_disparity_measured - min_disparity_real
-
-        return baseline, min_depth, max_disparity_error
+        return baseline, min_depth
 
     def _depthErrorCalculator(self, depth, baseline, focal_length,
                               max_disparity_error):
