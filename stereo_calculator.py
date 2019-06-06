@@ -4,33 +4,29 @@ from builtins import *
 import math
 import tkinter as tk
 import matplotlib.pyplot as plt
+from pyscreenshot import grab
 
 
 class StereoVisionCalculator(object):
     def __init__(self):
         self.root = tk.Tk()
-        self.root.config(bg='#212121')
         self.root.tk_setPalette(background='#212121',
                                 activebackground='#212121',
                                 fg='#fff',
                                 activeforeground='#ccc')
-
         self.root.title("StereoVision Calculator")
-        self.var1 = tk.IntVar(self.root)
-        self.pmenu1 = tk.StringVar(self.root)
-        self.pmenu2 = tk.StringVar(self.root)
-        self.l1 = tk.DoubleVar(self.root)
-        self.l2 = tk.DoubleVar(self.root)
-        self.l3 = tk.DoubleVar(self.root)
-        self.l4 = tk.DoubleVar(self.root)
+
+        self.var = [tk.IntVar(self.root) for _ in range(2)]  # Checkboxes
+        self.pmenu = [tk.StringVar(self.root) for _ in range(2)]  # Popup menus
+        self.l = [tk.DoubleVar(self.root) for _ in range(4)]  # Results
+        self.entries = [tk.Entry(self.root) for _ in range(8)]  # Entries
+        self.entries[7]["state"] = "disabled"
 
         # Entries
-        self.entries = [tk.Entry(self.root) for _ in range(8)]
-
         for row, entry in enumerate(self.entries, start=1):
             entry.grid(row=row, column=1, sticky="W")
 
-        # Text entries
+        # Text
         textlist = [
             'Sensor size', 'Resolution width', 'Resolution height',
             'Focal FoV', 'Max depth', 'Max depth error', 'Min disparity',
@@ -58,45 +54,54 @@ class StereoVisionCalculator(object):
         # Buttons
         tk.Checkbutton(self.root,
                        text="Auto calculate",
-                       variable=self.var1,
+                       variable=self.var[0],
                        command=self._callback,
                        selectcolor='#212121').grid(row=0, sticky="W")
-        tk.Button(self.root, text="Help", width=10,
-                  command=self._help).grid(row=0, column=2, sticky="W")
+        tk.Checkbutton(self.root,
+                       text="",
+                       variable=self.var[1],
+                       command=self._disp,
+                       selectcolor='#212121').grid(row=8, column=1, sticky="E")
+        tk.Button(self.root,
+                  text="Capture",
+                  width=12,
+                  command=self._capture).grid(row=0, column=2, sticky="W")
         tk.Button(self.root,
                   text="Calculate",
-                  width=10,
+                  width=12,
                   command=self._callback).grid(row=13, sticky="W")
-        tk.Button(self.root, text="Plot", width=10,
+        tk.Button(self.root,
+                  text="Plot",
+                  width=12,
                   command=self._plot).grid(row=13, column=2, sticky="W")
 
         # Dropdown menus
         choices1 = {'mm', 'inch'}
-        self.pmenu1.set('mm')  # set the default option
-        self.popupMenu1 = tk.OptionMenu(self.root, self.pmenu1, *choices1)
-        self.popupMenu1.grid(row=1, column=2, sticky="W")
+        self.pmenu[0].set('mm')  # set the default option
+        self.popupMenu0 = tk.OptionMenu(self.root, self.pmenu[0], *choices1)
+        self.popupMenu0.grid(row=1, column=2, sticky="W")
 
         choices2 = {'Horizontal', 'Vertical', 'Diagonal'}
-        self.pmenu2.set('Horizontal')  # set the default option
-        self.popupMenu2 = tk.OptionMenu(self.root, self.pmenu2, *choices2)
-        self.popupMenu2.grid(row=4, column=2, sticky="W")
+        self.pmenu[1].set('Horizontal')  # set the default option
+        self.popupMenu1 = tk.OptionMenu(self.root, self.pmenu[1], *choices2)
+        self.popupMenu1.grid(row=4, column=2, sticky="W")
 
-        self.popupMenu1.config(highlightthickness='0')
-        self.popupMenu2.config(highlightthickness='0')
+        self.popupMenu0.config(highlightthickness='0', width=12)
+        self.popupMenu1.config(highlightthickness='0', width=12)
 
-        # Result entries
-        tk.Label(self.root, textvariable=self.l1).grid(row=9,
-                                                       column=1,
-                                                       sticky="W")
-        tk.Label(self.root, textvariable=self.l2).grid(row=10,
-                                                       column=1,
-                                                       sticky="W")
-        tk.Label(self.root, textvariable=self.l3).grid(row=11,
-                                                       column=1,
-                                                       sticky="W")
-        tk.Label(self.root, textvariable=self.l4).grid(row=12,
-                                                       column=1,
-                                                       sticky="W")
+        # Results
+        tk.Label(self.root, textvariable=self.l[0]).grid(row=9,
+                                                         column=1,
+                                                         sticky="W")
+        tk.Label(self.root, textvariable=self.l[1]).grid(row=10,
+                                                         column=1,
+                                                         sticky="W")
+        tk.Label(self.root, textvariable=self.l[2]).grid(row=11,
+                                                         column=1,
+                                                         sticky="W")
+        tk.Label(self.root, textvariable=self.l[3]).grid(row=12,
+                                                         column=1,
+                                                         sticky="W")
 
     def mainloop(self):
         self.root.mainloop()
@@ -181,20 +186,20 @@ class StereoVisionCalculator(object):
 
     def _callback(self):
 
-        if (self.entries[0].get() and self.entries[1].get()
-                and self.entries[2].get() and self.entries[3].get()
-                and self.pmenu1.get() and self.pmenu2.get()):
-            sensor_size = self.entries[0].get() + self.pmenu1.get()
+        if (self.entries[0].get() and self.entries[1].get() and
+                self.entries[2].get() and self.entries[3].get() and
+                self.pmenu[0].get() and self.pmenu[1].get()):
+            sensor_size = self.entries[0].get() + self.pmenu[0].get()
             img_width = int(self.entries[1].get())
             img_height = int(self.entries[2].get())
-            focal_fov = self.entries[3].get() + self.pmenu2.get()[0]
+            focal_fov = self.entries[3].get() + self.pmenu[1].get()[0]
 
             f_mm, f_pixel = self._focalLengthCalculator(
                 sensor_size, img_width, img_height, focal_fov)
-            self.l1.set(round(f_mm, 2))
+            self.l[0].set(round(f_mm, 2))
 
-            if (self.entries[4].get() and self.entries[5].get()
-                    and self.entries[6].get() and self.entries[7].get()):
+            if (self.entries[4].get() and self.entries[5].get() and
+                    self.entries[6].get() and self.entries[7].get()):
                 focal_length = f_pixel
                 max_depth = float(self.entries[4].get())
                 max_depth_error = float(self.entries[5].get())
@@ -205,16 +210,27 @@ class StereoVisionCalculator(object):
                     min_disparity_measured, max_depth, max_depth_error,
                     disparity_range, focal_length)
 
-                self.l2.set(round(baseline * 1000, 2))
-                self.l3.set(round(min_depth * 100, 2))
-                self.l4.set(round(max_disparity_error, 4))
+                self.l[1].set(round(baseline * 1000, 2))
+                self.l[2].set(round(min_depth * 100, 2))
+                self.l[3].set(round(max_disparity_error, 4))
 
-        if self.var1.get():
+        if self.var[0].get():
             self.root.after(100, self._callback)
 
-    def _help(self):
-        m1 = tk.Tk()
-        m1.mainloop()
+    def _disp(self):
+        if self.var[1].get():
+            self.entries[7]["state"] = "normal"
+        else:
+            self.entries[7]["state"] = "disabled"
+
+    def _capture(self):
+        x1 = self.root.winfo_rootx()
+        x2 = x1 + self.root.winfo_reqwidth()
+        y1 = self.root.winfo_rooty()
+        y2 = y1 + self.root.winfo_reqheight()
+
+        im = grab(bbox=(x1, y1, x2, y2))
+        im.show()
 
     def _plot(self):
         # Parameters
@@ -238,8 +254,8 @@ class StereoVisionCalculator(object):
         ax.title.set_color('#FAFAFA')
 
         # Plot
-        x = self.l3.get()
-        y = self.l4.get()
+        x = self.l[2].get()
+        y = self.l[3].get()
         plt.plot(x, y)
 
         # Show
