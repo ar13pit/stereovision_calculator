@@ -9,6 +9,34 @@ from pyscreenshot import grab
 
 class StereoVisionCalculator(object):
     def __init__(self):
+        """
+        Class constructor of StereoVisionCalculator.
+        This method initalizes the tkinter GUI and the object variables to
+        store the user input and calculation results.
+        """
+        # Focal length calculator parameters
+        self.sensor_size = None
+        self.img_width = None
+        self.img_height = None
+        self.focal_fov = None
+        self.focal_length = None
+
+        # Baseline calculator parameters
+        self.max_depth = None
+        self.max_depth_error = None
+        self.max_disparity = None
+        self.calibration_disparity_error = None
+        self.min_disparity = None
+        self.baseline = None
+        self.min_depth = None
+
+        # Initialize the complete GUI
+        self._initializeGUI()
+
+    def _initializeGUI(self):
+        """
+        Method to setup the StereoVision Calculator GUI using tkinter
+        """
         self.root = tk.Tk()
         self.root.tk_setPalette(background='#212121',
                                 activebackground='#212121',
