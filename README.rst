@@ -61,52 +61,52 @@ Usage
 Inputs
 -------------------
 
-**Sensor size**
-The diagonal size of the sensor in mm or inch. (Keep in mind that sensor formats are not equal to the diagonal size, see `here <https://en.wikipedia.org/wiki/Image_sensor_format#Table_of_sensor_formats_and_sizes>`_)
+| **Sensor size**
+| The diagonal size of the sensor in mm or inch. (Keep in mind that sensor formats are not equal to the diagonal size, see `here <https://en.wikipedia.org/wiki/Image_sensor_format#Table_of_sensor_formats_and_sizes>`_)
 
-**Resolution width**
-The amount of horizontal pixels of the image
+| **Resolution width**
+| The amount of horizontal pixels of the image
 
-**Resolution height**
-The amount of vertical pixels of the image
+| **Resolution height**
+| The amount of vertical pixels of the image
 
-**Focal FoV**
-The Field of View of the lens
+| **Focal FoV**
+| The Field of View of the lens
 
-**Max depth**
-The distance where you want to define a desired error
+| **Max depth**
+| The distance where you want to define a desired error
 
-**Max depth error**
-The desired error that you want at the distance you previously set
+| **Max depth error**
+| The desired error that you want at the distance you previously set
 
-**Disparity range**
-Select the maximum disparity that your software calculates (standard 128)
+| **Disparity range**
+| Select the maximum disparity that your software calculates (standard 128)
 
 -------------------
 Results
 -------------------
 
-**Focal length**
-Calculated focal length
+| **Focal length**
+| Calculated focal length
 
-**Baseline**
-The distance between the two imaging sensors counted from the center of each sensor
+| **Baseline**
+| The distance between the two imaging sensors counted from the center of each sensor
 
-**Minimum measurable depth**
-The minimum depth that the stereovision setup can meaure
+| **Minimum measurable depth**
+| The minimum depth that the stereovision setup can meaure
 
 -------------------
 Functions
 -------------------
 
-**Capture**
-Capture a screenshot of the program
+| **Capture**
+| Capture a screenshot of the program
 
-**Auto calculate**
-Let the program calculate the results immediately when it detects a change in the input fields
+| **Auto calculate**
+| Let the program calculate the results immediately when it detects a change in the input fields
 
-**Calculate**
-Calculate the results
+| **Calculate**
+| Calculate the results
 
-**Plot**
-Plot the depth error chart
+| **Plot**
+| Plot the depth error chart
