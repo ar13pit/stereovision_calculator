@@ -62,7 +62,7 @@ Inputs
 -------------------
 
 **Sensor size**
-The diagonal size of the sensor in mm or inch. (Keep in mind that sensor formats are not equal to the diagonal size, see `Link here <https://en.wikipedia.org/wiki/Image_sensor_format#Table_of_sensor_formats_and_sizes>`_)
+The diagonal size of the sensor in mm or inch. (Keep in mind that sensor formats are not equal to the diagonal size, see `here <https://en.wikipedia.org/wiki/Image_sensor_format#Table_of_sensor_formats_and_sizes>`_)
 
 **Resolution width**
 The amount of horizontal pixels of the image
