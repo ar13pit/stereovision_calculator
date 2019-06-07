@@ -36,7 +36,6 @@ Clone the repository with:
 .. code:: shell
 
     $ git clone https://github.com/ar13pit/stereovision_calculator.git
-    $ cd ING-Sprinters
 
 install the required python packages with:
 
