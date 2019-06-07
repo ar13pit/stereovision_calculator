@@ -134,8 +134,8 @@ class StereoVisionCalculator(object):
     def mainloop(self):
         self.root.mainloop()
 
-    def _focalLengthCalculator(self, sensor_size, img_width, img_height,
-                               focal_fov):
+    def _focalLengthCalculator(self, sensor_size, size, img_width, img_height,
+                               focal_fov, fov_type):
         """
         Function to calculate the focal length of the imaging sensor given:
         :param: sensor_size: The diagonal sensor size in inch or mm, eg: 2/3in
@@ -143,11 +143,10 @@ class StereoVisionCalculator(object):
         :param: img_height:  The amount of pixels in height
         :param: focal_fov: The horizontal/vertical/diagonal field of view of the lens, eg: 70h
         """
-        if ('inch') in sensor_size:
-            sensor_size = sensor_size.replace('inch', '')
-            sensor_size = float(sensor_size) * 25.4
+        if size == 'inch':
+            sensor_size = sensor_size * 25.4
         else:
-            sensor_size = float(sensor_size.replace('mm', ''))
+            sensor_size = sensor_size
 
         ratio = img_height / img_width
         sensor_width_mm = math.sqrt(sensor_size * sensor_size /
@@ -160,19 +159,22 @@ class StereoVisionCalculator(object):
         roi_diagonal_mm = math.sqrt(roi_height_mm * roi_height_mm +
                                     roi_width_mm * roi_width_mm)
 
-        fov = float(focal_fov[:-1]) / 180 * math.pi
+        fov = focal_fov / 180 * math.pi
         atanInner = math.tan(fov * 0.5)
 
-        if ('H') in focal_fov:
-            f_mm = roi_width_mm / (2 * atanInner)
-        elif ('V') in focal_fov:
-            f_mm = roi_height_mm / (2 * atanInner)
-        elif ('D') in focal_fov:
-            f_mm = roi_diagonal_mm / (2 * atanInner)
+        try:
+            if fov_type == 'Horizontal':
+                f_mm = roi_width_mm / (2 * atanInner)
+            elif fov_type == 'Vertical':
+                f_mm = roi_height_mm / (2 * atanInner)
+            elif fov_type == 'Diagonal':
+                f_mm = roi_diagonal_mm / (2 * atanInner)
 
-        pixel_size_mm = roi_width_mm / img_width
-
-        f_pixel = f_mm / pixel_size_mm
+            pixel_size_mm = roi_width_mm / img_width
+            f_pixel = f_mm / pixel_size_mm
+        except ZeroDivisionError:
+            f_mm = 0
+            f_pixel = 0
 
         return f_mm, f_pixel
 
@@ -217,13 +219,15 @@ class StereoVisionCalculator(object):
         if (self.entries[0].get() and self.entries[1].get() and
                 self.entries[2].get() and self.entries[3].get() and
                 self.pmenu[0].get() and self.pmenu[1].get()):
-            sensor_size = self.entries[0].get() + self.pmenu[0].get()
+            sensor_size = float(self.entries[0].get())
+            size = self.pmenu[0].get()
             img_width = int(self.entries[1].get())
             img_height = int(self.entries[2].get())
-            focal_fov = self.entries[3].get() + self.pmenu[1].get()[0]
+            focal_fov = float(self.entries[3].get())
+            fov_type = self.pmenu[1].get()
 
             f_mm, f_pixel = self._focalLengthCalculator(
-                sensor_size, img_width, img_height, focal_fov)
+                sensor_size, size, img_width, img_height, focal_fov, fov_type)
             self.l[0].set(round(f_mm, 2))
 
             if (self.entries[4].get() and self.entries[5].get() and
