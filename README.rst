@@ -2,6 +2,9 @@
 StereoVision Calculator
 =================
 
+.. image:: https://imgur.com/Eqoh9SL.png
+   :align: center
+
 =================
 Table of contents
 =================
