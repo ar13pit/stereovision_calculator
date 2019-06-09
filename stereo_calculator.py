@@ -3,6 +3,8 @@ from __future__ import (print_function, division, absolute_import,
 from builtins import *
 import math
 import tkinter as tk
+from tkinter import ttk
+from ttkthemes import ThemedTk
 import matplotlib.pyplot as plt
 from pyscreenshot import grab
 
@@ -37,18 +39,16 @@ class StereoVisionCalculator(object):
         """
         Method to setup the StereoVision Calculator GUI using tkinter
         """
-        self.root = tk.Tk()
-        self.root.tk_setPalette(background='#212121',
-                                activebackground='#212121',
-                                fg='#fff',
-                                activeforeground='#ccc')
+        self.root = ThemedTk(theme="arc")
+        self.root.tk_setPalette(background='#f5f6f7')
         self.root.title("StereoVision Calculator")
 
         self.var = [tk.IntVar(self.root) for _ in range(2)]  # Checkboxes
         self.pmenu = [tk.StringVar(self.root) for _ in range(2)]  # Popup menus
         self.l = [tk.DoubleVar(self.root) for _ in range(4)]  # Results
-        self.entries = [tk.Entry(self.root) for _ in range(8)]  # Entries
+        self.entries = [ttk.Entry(self.root) for _ in range(8)]  # Entries
         self.entries[7]["state"] = "disabled"
+        self.entries[7]["width"] = 14
 
         # Entries
         for row, entry in enumerate(self.entries, start=1):
@@ -69,67 +69,62 @@ class StereoVisionCalculator(object):
 
         i = 0
         while i < len(textlist):
-            tk.Label(self.root, text=textlist[i]).grid(row=i + 1, sticky="W")
+            ttk.Label(self.root, text=textlist[i]).grid(row=i + 1, sticky="W")
             i += 1
 
         j = 0
         while j < len(symbollist):
-            tk.Label(self.root, text=symbollist[j]).grid(row=j + 2,
-                                                         column=2,
-                                                         sticky="W")
+            ttk.Label(self.root, text=symbollist[j]).grid(row=j + 2,
+                                                          column=2,
+                                                          sticky="W")
             j += 1
 
         # Buttons
-        tk.Checkbutton(self.root,
-                       text="Auto calculate",
-                       variable=self.var[0],
-                       command=self._callback,
-                       selectcolor='#212121').grid(row=0, sticky="W")
-        tk.Checkbutton(self.root,
-                       text="",
-                       variable=self.var[1],
-                       command=self._disp,
-                       selectcolor='#212121').grid(row=8, column=1, sticky="E")
-        tk.Button(self.root,
-                  text="Capture",
-                  width=12,
-                  command=self._capture).grid(row=0, column=2, sticky="W")
-        tk.Button(self.root,
-                  text="Calculate",
-                  width=12,
-                  command=self._callback).grid(row=13, sticky="W")
-        tk.Button(self.root,
-                  text="Plot",
-                  width=12,
-                  command=self._plot).grid(row=13, column=2, sticky="W")
+        ttk.Checkbutton(self.root,
+                        text="Auto calculate",
+                        variable=self.var[0],
+                        command=self._callback).grid(row=0, sticky="W")
+        ttk.Checkbutton(self.root,
+                        text="",
+                        variable=self.var[1],
+                        command=self._disp).grid(row=8, column=1, sticky="E")
+        ttk.Button(self.root,
+                   text="Capture",
+                   width=12,
+                   command=self._capture).grid(row=0, column=2, sticky="W")
+        ttk.Button(self.root,
+                   text="Calculate",
+                   width=12,
+                   command=self._callback).grid(row=13, sticky="W")
+        ttk.Button(self.root,
+                   text="Plot",
+                   width=12,
+                   command=self._plot).grid(row=13, column=2, sticky="W")
 
         # Dropdown menus
-        choices1 = {'mm', 'inch'}
+        choices1 = {'', 'mm', 'inch'}
         self.pmenu[0].set('mm')  # set the default option
-        self.popupMenu0 = tk.OptionMenu(self.root, self.pmenu[0], *choices1)
+        self.popupMenu0 = ttk.OptionMenu(self.root, self.pmenu[0], *choices1)
         self.popupMenu0.grid(row=1, column=2, sticky="W")
 
-        choices2 = {'Horizontal', 'Vertical', 'Diagonal'}
+        choices2 = {'', 'Horizontal', 'Vertical', 'Diagonal'}
         self.pmenu[1].set('Horizontal')  # set the default option
-        self.popupMenu1 = tk.OptionMenu(self.root, self.pmenu[1], *choices2)
+        self.popupMenu1 = ttk.OptionMenu(self.root, self.pmenu[1], *choices2)
         self.popupMenu1.grid(row=4, column=2, sticky="W")
 
-        self.popupMenu0.config(highlightthickness='0', width=12)
-        self.popupMenu1.config(highlightthickness='0', width=12)
-
         # Results
-        tk.Label(self.root, textvariable=self.l[0]).grid(row=9,
-                                                         column=1,
-                                                         sticky="W")
-        tk.Label(self.root, textvariable=self.l[1]).grid(row=10,
-                                                         column=1,
-                                                         sticky="W")
-        tk.Label(self.root, textvariable=self.l[2]).grid(row=11,
-                                                         column=1,
-                                                         sticky="W")
-        tk.Label(self.root, textvariable=self.l[3]).grid(row=12,
-                                                         column=1,
-                                                         sticky="W")
+        ttk.Label(self.root, textvariable=self.l[0]).grid(row=9,
+                                                          column=1,
+                                                          sticky="W")
+        ttk.Label(self.root, textvariable=self.l[1]).grid(row=10,
+                                                          column=1,
+                                                          sticky="W")
+        ttk.Label(self.root, textvariable=self.l[2]).grid(row=11,
+                                                          column=1,
+                                                          sticky="W")
+        ttk.Label(self.root, textvariable=self.l[3]).grid(row=12,
+                                                          column=1,
+                                                          sticky="W")
 
     def mainloop(self):
         self.root.mainloop()
@@ -272,18 +267,18 @@ class StereoVisionCalculator(object):
         plt.xlabel("Depth (m)")
         plt.ylabel("Depth error (cm)")
 
-        # Dark theme
-        fig1.patch.set_facecolor('#212121')
-        ax.patch.set_facecolor('#212121')
-        ax.spines['bottom'].set_color('#FAFAFA')
-        ax.spines['top'].set_color('#FAFAFA')
-        ax.spines['right'].set_color('#FAFAFA')
-        ax.spines['left'].set_color('#FAFAFA')
-        ax.tick_params(axis='x', colors='#FAFAFA', which='both')
-        ax.tick_params(axis='y', colors='#FAFAFA', which='both')
-        ax.yaxis.label.set_color('#FAFAFA')
-        ax.xaxis.label.set_color('#FAFAFA')
-        ax.title.set_color('#FAFAFA')
+        # Light theme
+        fig1.patch.set_facecolor('#f5f6f7')  # 212121 Dark
+        ax.patch.set_facecolor('#f5f6f7')
+        ax.spines['bottom'].set_color('#5c616c')  # FAFAFA Dark
+        ax.spines['top'].set_color('#5c616c')
+        ax.spines['right'].set_color('#5c616c')
+        ax.spines['left'].set_color('#5c616c')
+        ax.tick_params(axis='x', colors='#5c616c', which='both')
+        ax.tick_params(axis='y', colors='#5c616c', which='both')
+        ax.yaxis.label.set_color('#5c616c')
+        ax.xaxis.label.set_color('#5c616c')
+        ax.title.set_color('#5c616c')
 
         # Plot
         x = self.l[2].get()
