@@ -46,9 +46,9 @@ class StereoVisionCalculator(object):
         self.var = [tk.IntVar(self.root) for _ in range(2)]  # Checkboxes
         self.pmenu = [tk.StringVar(self.root) for _ in range(2)]  # Popup menus
         self.l = [tk.DoubleVar(self.root) for _ in range(4)]  # Results
-        self.entries = [ttk.Entry(self.root) for _ in range(8)]  # Entries
-        self.entries[7]["state"] = "disabled"
-        self.entries[7]["width"] = 14
+        self.entries = [ttk.Entry(self.root) for _ in range(9)]  # Entries
+        self.entries[8]["state"] = "disabled"
+        self.entries[8]["width"] = 14
 
         # Entries
         for row, entry in enumerate(self.entries, start=1):
@@ -57,14 +57,13 @@ class StereoVisionCalculator(object):
         # Text
         textlist = [
             'Sensor size', 'Resolution width', 'Resolution height',
-            'Focal FoV', 'Max depth', 'Max depth error', 'Min disparity',
-            'Disparity range', 'Focal length', 'Baseline',
-            'Minimum measurable depth',
-            'Max allowed disparity error \n from calibration'
+            'Focal FoV', 'Max depth', 'Max depth error', 'Calibration \n disparity error',
+            'Disparity range', 'Min disparity', 'Focal length', 'Baseline',
+            'Minimum measurable depth'
         ]
         symbollist = [
-            'pixels', 'pixels', '', 'm', 'm', 'pixels', 'pixels', 'mm', 'mm',
-            'cm', 'pixels'
+            'pixels', 'pixels', '', 'm', 'm', 'pixel', 'pixels', 'pixels', 'mm', 'mm',
+            'cm'
         ]
 
         i = 0
@@ -87,7 +86,7 @@ class StereoVisionCalculator(object):
         ttk.Checkbutton(self.root,
                         text="",
                         variable=self.var[1],
-                        command=self._disp).grid(row=8, column=1, sticky="E")
+                        command=self._disp).grid(row=9, column=1, sticky="E")
         ttk.Button(self.root,
                    text="Capture",
                    width=12,
@@ -113,16 +112,13 @@ class StereoVisionCalculator(object):
         self.popupMenu1.grid(row=4, column=2, sticky="W")
 
         # Results
-        ttk.Label(self.root, textvariable=self.l[0]).grid(row=9,
+        ttk.Label(self.root, textvariable=self.l[0]).grid(row=10,
                                                           column=1,
                                                           sticky="W")
-        ttk.Label(self.root, textvariable=self.l[1]).grid(row=10,
+        ttk.Label(self.root, textvariable=self.l[1]).grid(row=11,
                                                           column=1,
                                                           sticky="W")
-        ttk.Label(self.root, textvariable=self.l[2]).grid(row=11,
-                                                          column=1,
-                                                          sticky="W")
-        ttk.Label(self.root, textvariable=self.l[3]).grid(row=12,
+        ttk.Label(self.root, textvariable=self.l[2]).grid(row=12,
                                                           column=1,
                                                           sticky="W")
 
@@ -230,25 +226,27 @@ class StereoVisionCalculator(object):
                 focal_length = f_pixel
                 max_depth = float(self.entries[4].get())
                 max_depth_error = float(self.entries[5].get())
-                min_disparity_measured = int(self.entries[6].get())
-                disparity_range = int(self.entries[7].get())
+                calibration_disparity_error = float(self.entries[6].get())
+                max_disparity = int(self.entries[7].get())
+                min_disparity = 1 if not self.entries[8].get() else int(
+                    self.entries[8].get())
 
-                baseline, min_depth, max_disparity_error = self._baselineCalculator(
-                    min_disparity_measured, max_depth, max_depth_error,
-                    disparity_range, focal_length)
+                baseline, min_depth = self._baselineCalculator(
+                    focal_length, max_depth, max_depth_error,
+                    max_disparity, calibration_disparity_error,
+                    min_disparity)
 
                 self.l[1].set(round(baseline * 1000, 2))
                 self.l[2].set(round(min_depth * 100, 2))
-                self.l[3].set(round(max_disparity_error, 4))
 
         if self.var[0].get():
             self.root.after(100, self._callback)
 
     def _disp(self):
         if self.var[1].get():
-            self.entries[7]["state"] = "normal"
+            self.entries[8]["state"] = "normal"
         else:
-            self.entries[7]["state"] = "disabled"
+            self.entries[8]["state"] = "disabled"
 
     def _capture(self):
         x1 = self.root.winfo_rootx()
