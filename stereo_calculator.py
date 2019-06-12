@@ -42,10 +42,11 @@ class StereoVisionCalculator(object):
         self.root = ThemedTk(theme="arc")
         self.root.tk_setPalette(background='#f5f6f7')
         self.root.title("StereoVision Calculator")
+        self.root.resizable(0, 0)  # Don't allow resize
 
         self.var = [tk.IntVar(self.root) for _ in range(2)]  # Checkboxes
         self.pmenu = [tk.StringVar(self.root) for _ in range(2)]  # Popup menus
-        self.l = [tk.DoubleVar(self.root) for _ in range(4)]  # Results
+        self.l = [tk.DoubleVar(self.root) for _ in range(3)]  # Results
         self.entries = [ttk.Entry(self.root) for _ in range(9)]  # Entries
         self.entries[8]["state"] = "disabled"
         self.entries[8]["width"] = 14
@@ -57,7 +58,7 @@ class StereoVisionCalculator(object):
         # Text
         textlist = [
             'Sensor size', 'Resolution width', 'Resolution height',
-            'Focal FoV', 'Max depth', 'Max depth error', 'Calibration \n disparity error',
+            'Focal FoV', 'Max depth', 'Max depth error', 'Calibration disparity error',
             'Disparity range', 'Min disparity', 'Focal length', 'Baseline',
             'Minimum measurable depth'
         ]
@@ -68,7 +69,8 @@ class StereoVisionCalculator(object):
 
         i = 0
         while i < len(textlist):
-            ttk.Label(self.root, text=textlist[i]).grid(row=i + 1, sticky="W")
+            ttk.Label(self.root, text=textlist[i]).grid(
+                row=i + 1, sticky="W", pady=5)
             i += 1
 
         j = 0
@@ -82,7 +84,7 @@ class StereoVisionCalculator(object):
         ttk.Checkbutton(self.root,
                         text="Auto calculate",
                         variable=self.var[0],
-                        command=self._callback).grid(row=0, sticky="W")
+                        command=self._callback).grid(row=0, sticky="W", pady=5)
         ttk.Checkbutton(self.root,
                         text="",
                         variable=self.var[1],
@@ -121,6 +123,11 @@ class StereoVisionCalculator(object):
         ttk.Label(self.root, textvariable=self.l[2]).grid(row=12,
                                                           column=1,
                                                           sticky="W")
+
+        col_count, row_count = self.root.grid_size()
+
+        for col in range(col_count):
+            self.root.grid_columnconfigure(col, pad=2)
 
     def mainloop(self):
         self.root.mainloop()
