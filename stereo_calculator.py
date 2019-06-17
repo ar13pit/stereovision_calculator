@@ -352,7 +352,7 @@ class StereoVisionCalculator(object):
         # Plot
         # Min range to max range
         for x in range(1, 1000):
-            y = self._depthErrorCalculator(float(x / 10), float(self.results[1].get() / 1000), float(self.results[0].get()), 0.25)
+            y = self._depthErrorCalculator(float(x / 10))
             x1.append(float(x / 10))
             y1.append(y)
 
