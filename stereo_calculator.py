@@ -286,7 +286,7 @@ class StereoVisionCalculator(object):
                 self.results[2].set(round(min_depth * 100, 2))
                 self.results[3].set(round(max_depth * 1000, 2))
                 self.results[4].set(depth_res)
-                self.results[4].set(depth_fov)
+                self.results[5].set(depth_fov)
 
         if self.check[0].get():
             self.root.after(100, self._callback)
