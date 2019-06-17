@@ -10,6 +10,33 @@ from matplotlib import style
 import math
 
 
+def baselineCalculator(focal_length, disparity, depth):
+    """
+    Function to calculate the baseline (in m) of the stereo camera given:
+    :param: disparity: Difference between the x pixels of both images (in px)
+    :param: depth: The depth corresponding to the disparity (in m)
+    :param: focal_length: The focal length of the system (in px)
+    """
+    return (disparity * depth / focal_length)
+
+def disparityToDepth(baseline, focal_length, disparity):
+    """
+    Function to calculate the Depth (in m) of a image point given:
+    :param: baseline: The distance between the camera centers (in m)
+    :param: focal_length: The focal length of the system (in px)
+    :param: disparity: Difference between the x pixels of both images (in px)
+    """
+    return (baseline * focal_length /disparity)
+
+def depthToDisparity(baseline, focal_length, depth):
+    """
+    Function to calculate the disparity between image points (in px) given:
+    :param: baseline: The distance between the camera centers (in m)
+    :param: focal_length: The focal length of the system (in px)
+    :param: depth: Depth of the image point (in m)
+    """
+    return (baseline * focal_length /depth)
+
 class StereoVisionCalculator(object):
     def __init__(self):
         """
@@ -24,14 +51,25 @@ class StereoVisionCalculator(object):
         self.focal_fov = None
         self.focal_length = None
 
-        # Baseline calculator parameters
-        self.max_depth = None
-        self.max_depth_error = None
-        self.max_disparity = None
-        self.calibration_disparity_error = None
-        self.min_disparity = None
-        self.baseline = None
-        self.min_depth = None
+        # Design limits
+        self.perf_baseline_min = None
+        self.perf_baseline_max = None
+        self.perf_depth_max = None
+        self.perf_depth_min = None
+        self.perf_depth_error = None
+        self.perf_disp_max = None
+        self.perf_disp_min = None
+        self.perf_disp_calibration_error = None
+
+        # Baseline calculator results
+        self._max_depth = None
+        self._min_depth = None
+        #self.max_depth_error = None
+        #self.max_disparity = None
+        #self.calibration_disparity_error = None
+        #self.min_disparity = None
+        self._baseline = None
+        #self.min_depth = None
 
         # Initialize the complete GUI
         self._initializeGUI()
