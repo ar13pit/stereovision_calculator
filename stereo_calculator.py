@@ -64,12 +64,12 @@ class StereoVisionCalculator(object):
         # Baseline calculator results
         self._max_depth = None
         self._min_depth = None
-        #self.max_depth_error = None
-        #self.max_disparity = None
-        #self.calibration_disparity_error = None
-        #self.min_disparity = None
+        # self.max_depth_error = None
+        # self.max_disparity = None
+        # self.calibration_disparity_error = None
+        # self.min_disparity = None
         self._baseline = None
-        #self.min_depth = None
+        # self.min_depth = None
 
         # Initialize the complete GUI
         self._initializeGUI()
@@ -84,11 +84,11 @@ class StereoVisionCalculator(object):
         self.root.resizable(0, 0)  # Don't allow resize
 
         self.check = [tk.IntVar(self.root) for _ in range(2)]  # Checkboxes
-        self.pmenu = [tk.StringVar(self.root) for _ in range(7)]  # Popup menus
+        self.pmenu = [tk.StringVar(self.root) for _ in range(4)]  # Popup menus
         self.results = [tk.DoubleVar(self.root) for _ in range(6)]  # Results
-        self.entries = [ttk.Entry(self.root) for _ in range(12)]  # Entries
-        self.entries[9]["state"] = "disabled"
-        self.entries[9]["width"] = 14
+        self.entries = [ttk.Entry(self.root) for _ in range(9)]  # Entries
+        self.entries[6]["state"] = "disabled"
+        self.entries[6]["width"] = 14
 
         self.results[4].set('0 x 0')
         self.results[5].set('0° x 0°')
@@ -102,9 +102,6 @@ class StereoVisionCalculator(object):
             'Resolution width': 'pixels',
             'Resolution height': 'pixels',
             'Focal FoV': '',
-            'Min baseline': '',
-            'Max baseline': '',
-            'Performance min depth': '',
             'Performance depth': '',
             'Performance depth error': '',
             'Performance disparity': 'pixels',
@@ -133,7 +130,7 @@ class StereoVisionCalculator(object):
         ttk.Checkbutton(self.root,
                         text="",
                         variable=self.check[1],
-                        command=self._disp).grid(row=10, column=1, sticky="E")
+                        command=self._disp).grid(row=7, column=1, sticky="E")
         ttk.Button(self.root,
                    text="Capture",
                    width=12,
@@ -141,18 +138,18 @@ class StereoVisionCalculator(object):
         ttk.Button(self.root,
                    text="Calculate",
                    width=12,
-                   command=self._callback).grid(row=19, sticky="W")
+                   command=self._callback).grid(row=16, sticky="W")
         ttk.Button(self.root,
                    text="Plot",
                    width=12,
-                   command=self._plot).grid(row=19, column=2, sticky="W")
+                   command=self._plot).grid(row=16, column=2, sticky="W")
 
         # Dropdown menus
         choices1 = {'', 'mm', 'in'}
         choices2 = {'', 'Horizontal', 'Vertical', 'Diagonal'}
         choices3 = {'', 'mm', 'cm', 'm', 'in', 'ft'}
         self.popupMenu = []
-        for x in range(0, 7):
+        for x in range(0, 4):
             if x == 0:
                 choices = choices1
                 self.pmenu[x].set('mm')
@@ -170,7 +167,7 @@ class StereoVisionCalculator(object):
         # Results
         for x in range(0, len(self.results)):
             ttk.Label(self.root, textvariable=self.results[x]).grid(
-                row=x + 13, column=1, sticky="W")
+                row=x + 10, column=1, sticky="W")
 
         col_count, row_count = self.root.grid_size()
 
@@ -305,16 +302,10 @@ class StereoVisionCalculator(object):
             if (self.entries[4].get() and self.entries[5].get() and
                     self.entries[6].get() and self.entries[7].get()):
                 focal_length = f_pixel
-                min_baseline = calculateToMeter(
-                    float(self.entries[4].get()), self.pmenu[2].get)
-                max_baseline = calculateToMeter(
-                    float(self.entries[5].get()), self.pmenu[3].get)
-                min_depth = calculateToMeter(
-                    float(self.entries[6].get()), self.pmenu[6].get)
                 perf_depth = calculateToMeter(
-                    float(self.entries[7].get()), self.pmenu[7].get)
+                    float(self.entries[4].get()), self.pmenu[7].get)
                 perf_depth_err = calculateToMeter(
-                    float(self.entries[8].get()), self.pmenu[8].get)
+                    float(self.entries[5].get()), self.pmenu[8].get)
                 perf_disp = 1 if not self.entries[9].get() else int(
                     self.entries[9].get())
                 max_disp = int(self.entries[10].get())
@@ -341,9 +332,9 @@ class StereoVisionCalculator(object):
 
     def _disp(self):
         if self.check[1].get():
-            self.entries[9]["state"] = "normal"
+            self.entries[6]["state"] = "normal"
         else:
-            self.entries[9]["state"] = "disabled"
+            self.entries[6]["state"] = "disabled"
 
     def _capture(self):
         x1 = self.root.winfo_rootx()
