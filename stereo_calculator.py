@@ -5,7 +5,7 @@ import tkinter as tk
 from tkinter import ttk
 from ttkthemes import ThemedTk
 from pyscreenshot import grab
-import matplotlib.pyplot as plot
+import matplotlib.pyplot as plt
 from matplotlib import style
 import math
 
