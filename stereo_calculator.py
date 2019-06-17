@@ -5,7 +5,7 @@ import tkinter as tk
 from tkinter import ttk
 from ttkthemes import ThemedTk
 from pyscreenshot import grab
-import matplotlib.pyplot as plot
+import matplotlib.pyplot as plt
 from matplotlib import style
 import math
 
@@ -47,26 +47,26 @@ class StereoVisionCalculator(object):
 
         self.check = [tk.IntVar(self.root) for _ in range(2)]  # Checkboxes
         self.pmenu = [tk.StringVar(self.root) for _ in range(7)]  # Popup menus
-        self.results = [tk.DoubleVar(self.root) for _ in range(5)]  # Results
+        self.results = [tk.DoubleVar(self.root) for _ in range(6)]  # Results
         self.entries = [ttk.Entry(self.root) for _ in range(12)]  # Entries
         self.entries[9]["state"] = "disabled"
         self.entries[9]["width"] = 14
 
-        self.results[3].set('0 - 0')
-        self.results[4].set('0')
+        self.results[4].set('0 x 0')
+        self.results[5].set('0° x 0°')
 
         # Entries
         for row, entry in enumerate(self.entries, start=1):
             entry.grid(row=row, column=1, sticky="W")
 
-        textlist = {
+        labels = {
             'Sensor size': '',
             'Resolution width': 'pixels',
             'Resolution height': 'pixels',
             'Focal FoV': '',
             'Min baseline': '',
             'Max baseline': '',
-            'Min depth': '',
+            'Performance min depth': '',
             'Performance depth': '',
             'Performance depth error': '',
             'Performance disparity': 'pixels',
@@ -74,12 +74,13 @@ class StereoVisionCalculator(object):
             'Calibration disparity error': 'pixel',
             'Focal length': 'mm',
             'Baseline': 'mm',
+            'Min depth': 'cm',
             'Max depth': 'm',
             'Depth resolution': 'pixels',
             'Depth FoV': 'deg'
         }
 
-        for x, (val, key) in enumerate(textlist.items()):
+        for x, (val, key) in enumerate(labels.items()):
             ttk.Label(self.root, text=val).grid(
                 row=x + 1, sticky="W", pady=5)
             if key:
@@ -102,11 +103,11 @@ class StereoVisionCalculator(object):
         ttk.Button(self.root,
                    text="Calculate",
                    width=12,
-                   command=self._callback).grid(row=18, sticky="W")
+                   command=self._callback).grid(row=19, sticky="W")
         ttk.Button(self.root,
                    text="Plot",
                    width=12,
-                   command=self._plot).grid(row=18, column=2, sticky="W")
+                   command=self._plot).grid(row=19, column=2, sticky="W")
 
         # Dropdown menus
         choices1 = {'', 'mm', 'in'}
@@ -199,7 +200,7 @@ class StereoVisionCalculator(object):
             f_mm = 0
             f_pixel = 0
 
-        return f_mm, f_pixel
+        return f_mm, f_pixel, roi_width_mm, roi_height_mm
 
     def _baselineCalculator(self, focal_length, max_depth, max_depth_error,
                             max_disparity, calibration_disparity_error,
@@ -237,9 +238,15 @@ class StereoVisionCalculator(object):
         depth_measured = baseline * focal_length / disparity_measured
         return abs(depth_measured - depth)
 
-    def _depthCalculator(self):
-        print('Calculate the depth FoV and resolution')
-        # return FoV, Resolution
+    def _depthCalculator(self, roi_width, roi_height, roi_width_mm, roi_height_mm, img_width, d_max, f_mm):
+        roi_full_pixel = str(roi_width - d_max) + ' x ' + str(roi_height)
+        h_full_angle = 2 * math.atan((1 * roi_width_mm * (img_width - d_max) / img_width) / (2 * f_mm))
+        v_angle = 2 * math.atan(roi_height_mm / (2 * f_mm))
+
+        FoV_h = round(h_full_angle / math.pi * 180, 1)
+        FoV_v = round(v_angle / math.pi * 180, 1)
+        FoV = str(FoV_h) + '° x ' + str(FoV_v) + '°'
+        return FoV, roi_full_pixel
 
     def _callback(self):
 
@@ -253,7 +260,7 @@ class StereoVisionCalculator(object):
             focal_fov = float(self.entries[3].get())
             fov_type = self.pmenu[1].get()
 
-            f_mm, f_pixel = self._focalLengthCalculator(
+            f_mm, f_pixel, roi_width_mm, roi_height_mm = self._focalLengthCalculator(
                 sensor_size, size, img_width, img_height, focal_fov, fov_type)
             self.results[0].set(round(f_mm, 2))
 
@@ -280,13 +287,16 @@ class StereoVisionCalculator(object):
                 #     max_disparity, calibration_disparity_error,
                 #     min_disparity)
 
-                # depth_res, depth_fov = self._depthCalculator()
-
                 self.results[1].set(round(baseline * 1000, 2))
                 self.results[2].set(round(min_depth * 100, 2))
                 self.results[3].set(round(max_depth * 1000, 2))
+
+            if self.entries[10].get():
+                d_max = int(self.entries[10].get()) - 1
+                depth_fov, depth_res = self._depthCalculator(
+                    img_width, img_height, roi_width_mm, roi_height_mm, img_width, d_max, f_mm)
                 self.results[4].set(depth_res)
-                self.results[4].set(depth_fov)
+                self.results[5].set(depth_fov)
 
         if self.check[0].get():
             self.root.after(100, self._callback)
