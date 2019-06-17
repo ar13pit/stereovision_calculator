@@ -75,15 +75,6 @@ Inputs
 | **Focal FoV**
 | The Field of View of the lens
 
-| **Min baseline**
-| The minimum desired baseline
-
-| **Max baseline**
-| The maximum desired baseline
-
-| **Min depth**
-| The minimum measurable depth
-
 | **Performance depth**
 | The distance where you want to define a desired error
 
