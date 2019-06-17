@@ -202,7 +202,7 @@ class StereoVisionCalculator(object):
         :param: focal_fov: The field of view of the lens
         :param: fov_type: Horizontal, vertical or diagonal FoV
         """
-        if size == 'inch':
+        if size == 'in':
             sensor_size = sensor_size * 25.4
         else:
             sensor_size = sensor_size
