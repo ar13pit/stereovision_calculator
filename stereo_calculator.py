@@ -1,12 +1,13 @@
 from __future__ import (print_function, division, absolute_import,
                         unicode_literals)
 from builtins import *
-import math
 import tkinter as tk
 from tkinter import ttk
 from ttkthemes import ThemedTk
-import matplotlib.pyplot as plt
 from pyscreenshot import grab
+import matplotlib.pyplot as plot
+from matplotlib import style
+import math
 
 
 class StereoVisionCalculator(object):
@@ -45,7 +46,7 @@ class StereoVisionCalculator(object):
         self.root.resizable(0, 0)  # Don't allow resize
 
         self.check = [tk.IntVar(self.root) for _ in range(2)]  # Checkboxes
-        self.pmenu = [tk.StringVar(self.root) for _ in range(2)]  # Popup menus
+        self.pmenu = [tk.StringVar(self.root) for _ in range(7)]  # Popup menus
         self.results = [tk.DoubleVar(self.root) for _ in range(5)]  # Results
         self.entries = [ttk.Entry(self.root) for _ in range(12)]  # Entries
         self.entries[9]["state"] = "disabled"
@@ -63,11 +64,11 @@ class StereoVisionCalculator(object):
             'Resolution width': 'pixels',
             'Resolution height': 'pixels',
             'Focal FoV': '',
-            'Min baseline': 'mm',
-            'Max baseline': 'mm',
-            'Min depth': 'mm',
-            'Performance depth': 'm',
-            'Performance depth error': 'cm',
+            'Min baseline': '',
+            'Max baseline': '',
+            'Min depth': '',
+            'Performance depth': '',
+            'Performance depth error': '',
             'Performance disparity': 'pixels',
             'Max disparity': 'pixels',
             'Calibration disparity error': 'pixel',
@@ -81,8 +82,9 @@ class StereoVisionCalculator(object):
         for x, (val, key) in enumerate(textlist.items()):
             ttk.Label(self.root, text=val).grid(
                 row=x + 1, sticky="W", pady=5)
-            ttk.Label(self.root, text=key).grid(
-                row=x + 1, column=2, sticky="W")
+            if key:
+                ttk.Label(self.root, text=key).grid(
+                    row=x + 1, column=2, sticky="W")
 
         # Buttons
         ttk.Checkbutton(self.root,
@@ -107,15 +109,24 @@ class StereoVisionCalculator(object):
                    command=self._plot).grid(row=18, column=2, sticky="W")
 
         # Dropdown menus
-        choices1 = {'', 'mm', 'inch'}
-        self.pmenu[0].set('mm')  # set the default option
-        self.popupMenu0 = ttk.OptionMenu(self.root, self.pmenu[0], *choices1)
-        self.popupMenu0.grid(row=1, column=2, sticky="W")
-
+        choices1 = {'', 'mm', 'in'}
         choices2 = {'', 'Horizontal', 'Vertical', 'Diagonal'}
-        self.pmenu[1].set('Horizontal')  # set the default option
-        self.popupMenu1 = ttk.OptionMenu(self.root, self.pmenu[1], *choices2)
-        self.popupMenu1.grid(row=4, column=2, sticky="W")
+        choices3 = {'', 'mm', 'cm', 'm', 'in', 'ft'}
+        self.popupMenu = []
+        for x in range(0, 7):
+            if x == 0:
+                choices = choices1
+                self.pmenu[x].set('mm')
+                a = 1
+            elif x == 1:
+                choices = choices2
+                self.pmenu[x].set('Horizontal')
+                a = 3
+            else:
+                choices = choices3
+                self.pmenu[x].set('mm')
+            self.popupMenu.append(ttk.OptionMenu(self.root, self.pmenu[x], *choices))
+            self.popupMenu[x].grid(row=x + a, column=2, sticky="W")
 
         # Results
         for x in range(0, len(self.results)):
@@ -129,6 +140,20 @@ class StereoVisionCalculator(object):
 
     def mainloop(self):
         self.root.mainloop()
+
+    def calculateToMeter(self, variable, conversion_from):
+        if conversion_from is "mm":
+            result = variable / 1000
+        elif conversion_from is "cm":
+            result = variable / 100
+        elif conversion_from is "m":
+            result = variable
+        elif conversion_from is "in":
+            result = variable * 0.0254
+        elif conversion_from is "ft":
+            result = variable * 0.3048
+
+        return result
 
     def _focalLengthCalculator(self, sensor_size, size, img_width, img_height,
                                focal_fov, fov_type):
@@ -212,11 +237,15 @@ class StereoVisionCalculator(object):
         depth_measured = baseline * focal_length / disparity_measured
         return abs(depth_measured - depth)
 
+    def _depthCalculator(self):
+        print('Calculate the depth FoV and resolution')
+        # return FoV, Resolution
+
     def _callback(self):
 
         if (self.entries[0].get() and self.entries[1].get() and
-                self.entries[2].get() and self.entries[3].get() and
-                self.pmenu[0].get() and self.pmenu[1].get()):
+                self.entries[2].get() and self.entries[3].get()):
+
             sensor_size = float(self.entries[0].get())
             size = self.pmenu[0].get()
             img_width = int(self.entries[1].get())
@@ -231,20 +260,33 @@ class StereoVisionCalculator(object):
             if (self.entries[4].get() and self.entries[5].get() and
                     self.entries[6].get() and self.entries[7].get()):
                 focal_length = f_pixel
-                max_depth = float(self.entries[4].get())
-                max_depth_error = float(self.entries[5].get())
-                calibration_disparity_error = float(self.entries[6].get())
-                max_disparity = int(self.entries[7].get())
-                min_disparity = 1 if not self.entries[8].get() else int(
-                    self.entries[8].get())
+                min_baseline = calculateToMeter(
+                    float(self.entries[4].get()), self.pmenu[2].get)
+                max_baseline = calculateToMeter(
+                    float(self.entries[5].get()), self.pmenu[3].get)
+                min_depth = calculateToMeter(
+                    float(self.entries[6].get()), self.pmenu[6].get)
+                perf_depth = calculateToMeter(
+                    float(self.entries[7].get()), self.pmenu[7].get)
+                perf_depth_err = calculateToMeter(
+                    float(self.entries[8].get()), self.pmenu[8].get)
+                perf_disp = 1 if not self.entries[9].get() else int(
+                    self.entries[9].get())
+                max_disp = int(self.entries[10].get())
+                calibration = float(self.entries[11].get())
 
-                baseline, min_depth = self._baselineCalculator(
-                    focal_length, max_depth, max_depth_error,
-                    max_disparity, calibration_disparity_error,
-                    min_disparity)
+                # baseline, min_depth, max_depth = self._baselineCalculator(
+                #     focal_length, max_depth, max_depth_error,
+                #     max_disparity, calibration_disparity_error,
+                #     min_disparity)
+
+                # depth_res, depth_fov = self._depthCalculator()
 
                 self.results[1].set(round(baseline * 1000, 2))
                 self.results[2].set(round(min_depth * 100, 2))
+                self.results[3].set(round(max_depth * 1000, 2))
+                self.results[4].set(depth_res)
+                self.results[4].set(depth_fov)
 
         if self.check[0].get():
             self.root.after(100, self._callback)
@@ -264,21 +306,14 @@ class StereoVisionCalculator(object):
         im = grab(bbox=(x1, y1, x2, y2))
         im.show()
 
-    def _xfrange(self, start, stop, step):
-        i = 0
-        while start + i * step < stop:
-            yield start + i * step
-            i += 1
-
     def _plot(self):
         # Parameters
+        style.use('seaborn-whitegrid')
         fig1, ax = plt.subplots()
         fig1.canvas.set_window_title('Plot')
         plt.title("Depth Error Chart")
         plt.xlabel("Depth (m)")
         plt.ylabel("Depth error (cm)")
-        ax.set_xlim([0, 10])
-        ax.set_ylim([0, 10])
         x1 = []
         y1 = []
 
@@ -297,15 +332,13 @@ class StereoVisionCalculator(object):
 
         # Plot
         # Min range to max range
-        for x in self._xfrange(1.0, 100.0, 0.1):
-            y = self._depthErrorCalculator(x, float(self.results[1].get() / 1000), float(self.results[0].get()), 0.25)
-            x1.append(x)
+        for x in range(1, 1000):
+            y = self._depthErrorCalculator(float(x / 10), float(self.results[1].get() / 1000), float(self.results[0].get()), 0.25)
+            x1.append(float(x / 10))
             y1.append(y)
 
-        print("X: " + str(x1) + "\tY: " + str(y1))
-
-        plt.plot(x1, y1, color="b")
-        plt.legend(('Error'), loc='upper left')
+        plt.plot(x1, y1, color="#039BE5")
+        plt.legend(['Error'], loc='upper left')
 
         # Show
         plt.show()
