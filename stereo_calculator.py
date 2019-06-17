@@ -285,7 +285,8 @@ class StereoVisionCalculator(object):
             self.results[0].set(round(f_mm, 2))
 
             if (self.entries[4].get() and self.entries[5].get() and
-                    self.entries[6].get() and self.entries[7].get()):
+                    self.entries[6].get() and self.entries[7].get() and
+                    self.entries[10].get()):
                 self.perf_depth = calculateToMeter(
                     float(self.entries[4].get()), self.pmenu[7].get)
                 self.perf_depth_error = calculateToMeter(
@@ -297,14 +298,12 @@ class StereoVisionCalculator(object):
 
                 self._baselineCalculator()
 
-                self.results[1].set(round(self._baseline * 1000, 2))
-                self.results[2].set(round(self._min_depth * 100, 2))
-
-            if self.entries[10].get():
                 d_max = self.perf_disp_max - 1
                 depth_fov, depth_res = self._depthCalculator(
                     self.img_width, self.img_height, roi_width_mm,
                     roi_height_mm, self.img_width, d_max, f_mm)
+                self.results[1].set(round(self._baseline * 1000, 2))
+                self.results[2].set(round(self._min_depth * 100, 2))
                 self.results[4].set(depth_res)
                 self.results[5].set(depth_fov)
 
