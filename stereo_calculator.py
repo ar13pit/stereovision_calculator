@@ -49,27 +49,18 @@ class StereoVisionCalculator(object):
         self.img_width = None
         self.img_height = None
         self.focal_fov = None
-        self.focal_length = None
 
         # Design limits
-        self.perf_baseline_min = None
-        self.perf_baseline_max = None
-        self.perf_depth_max = None
-        self.perf_depth_min = None
+        self.perf_depth = None
         self.perf_depth_error = None
         self.perf_disp_max = None
-        self.perf_disp_min = None
+        self.perf_disp = None
         self.perf_disp_calibration_error = None
 
         # Baseline calculator results
-        self._max_depth = None
         self._min_depth = None
-        # self.max_depth_error = None
-        # self.max_disparity = None
-        # self.calibration_disparity_error = None
-        # self.min_disparity = None
         self._baseline = None
-        # self.min_depth = None
+        self._focal_length = None
 
         # Initialize the complete GUI
         self._initializeGUI()
@@ -191,8 +182,7 @@ class StereoVisionCalculator(object):
 
         return result
 
-    def _focalLengthCalculator(self, sensor_size, size, img_width, img_height,
-                               focal_fov, fov_type):
+    def _focalLengthCalculator(self, size, fov_type):
         """
         Function to calculate the focal length of the imaging sensor given:
         :param: sensor_size: The diagonal sensor size
@@ -202,12 +192,12 @@ class StereoVisionCalculator(object):
         :param: focal_fov: The field of view of the lens
         :param: fov_type: Horizontal, vertical or diagonal FoV
         """
-        if size == 'in':
-            sensor_size = sensor_size * 25.4
+        if size == 'inch':
+            self.sensor_size = self.sensor_size * 25.4
         else:
-            sensor_size = sensor_size
+            self.sensor_size = self.sensor_size
 
-        ratio = img_height / img_width
+        ratio = self.img_height / self.img_width
         sensor_width_mm = math.sqrt(sensor_size * sensor_size /
                                     (1.0 + ratio * ratio))
         sensor_height_mm = math.sqrt(sensor_size * sensor_size /
@@ -218,7 +208,7 @@ class StereoVisionCalculator(object):
         roi_diagonal_mm = math.sqrt(roi_height_mm * roi_height_mm +
                                     roi_width_mm * roi_width_mm)
 
-        fov = focal_fov / 180 * math.pi
+        fov = self.focal_fov / 180 * math.pi
         atanInner = math.tan(fov * 0.5)
 
         try:
@@ -230,47 +220,42 @@ class StereoVisionCalculator(object):
                 f_mm = roi_diagonal_mm / (2 * atanInner)
 
             pixel_size_mm = roi_width_mm / img_width
-            f_pixel = f_mm / pixel_size_mm
+            self._focal_length = f_mm / pixel_size_mm
         except ZeroDivisionError:
             f_mm = 0
-            f_pixel = 0
+            self._focal_length = 0
 
-        return f_mm, f_pixel, roi_width_mm, roi_height_mm
+        return f_mm, roi_width_mm, roi_height_mm
 
-    def _baselineCalculator(self, focal_length, max_depth, max_depth_error,
-                            max_disparity, calibration_disparity_error,
-                            min_disparity):
+    def _baselineCalculator(self):
         """
-        Function to calculate the baseline of the stereo camera given:
-        :param: min_disparity_measured: The least measurable disparity of the
-            system
-        :param: max_depth: The real depth corresponding to the
-            min_disparity_measured
-        :param: max_depth_error: The maximum allowed error in the measurement of
-            depth at max_depth
-        :param: disparity_range: Total number of disparity points allowed. So
-            maximum disparity becomes min_disparity_measured + disparity_range
-        :param: focal_length: The focal length of the system in terms of pixels
+        Function to calculate the baseline and min depth of the stereo camera given:
+            1. Focal length of the lens
+            2. Performace depth
+            3. Performance depth error
+            4. Disparity at performance depth
+            5. Calibration disparity error
         """
-        baseline = ((min_disparity + calibration_disparity_error) *
-                    (max_depth + max_depth_error)) / focal_length
+        disparity = self.perf_disp + self.perf_disp_calibration_error
+        depth = self.perf_depth + self.perf_depth_error
 
-        min_depth = (baseline * focal_length) / max_disparity
+        self._baseline = baselineCalculator(self._focal_length, disparity, depth)
+        self._min_depth = disparityToDepth(self._baseline, self._focal_length,
+                self.perf_disp_max)
 
-        return baseline, min_depth
-
-    def _depthErrorCalculator(self, depth, baseline, focal_length,
-                              max_disparity_error):
+    def _depthErrorCalculator(self, depth):
         """
         Method to calculate the max_depth_error for a given depth for
         pre-determined baseline and focal length
         :param: depth
         :return: max_depth_error
         """
-        disparity_real = baseline * focal_length / depth
-        disparity_measured = disparity_real + max_disparity_error
+        disparity_real = depthToDisparity(self._baseline, self._focal_length,
+                depth)
+        disparity_measured = disparity_real + self.perf_disp_calibration_error
 
-        depth_measured = baseline * focal_length / disparity_measured
+        depth_measured = disparityToDepth(self._baseline, self._focal_length,
+                disparity_measured)
         return abs(depth_measured - depth)
 
     def _depthCalculator(self, roi_width, roi_height, roi_width_mm, roi_height_mm, img_width, d_max, f_mm):
@@ -288,42 +273,38 @@ class StereoVisionCalculator(object):
         if (self.entries[0].get() and self.entries[1].get() and
                 self.entries[2].get() and self.entries[3].get()):
 
-            sensor_size = float(self.entries[0].get())
+            self.sensor_size = float(self.entries[0].get())
             size = self.pmenu[0].get()
-            img_width = int(self.entries[1].get())
-            img_height = int(self.entries[2].get())
-            focal_fov = float(self.entries[3].get())
+            self.img_width = int(self.entries[1].get())
+            self.img_height = int(self.entries[2].get())
+            self.focal_fov = float(self.entries[3].get())
             fov_type = self.pmenu[1].get()
 
-            f_mm, f_pixel, roi_width_mm, roi_height_mm = self._focalLengthCalculator(
-                sensor_size, size, img_width, img_height, focal_fov, fov_type)
+            f_mm, roi_width_mm, roi_height_mm = self._focalLengthCalculator(
+                size, fov_type)
             self.results[0].set(round(f_mm, 2))
 
             if (self.entries[4].get() and self.entries[5].get() and
                     self.entries[6].get() and self.entries[7].get()):
-                focal_length = f_pixel
-                perf_depth = calculateToMeter(
+                self.perf_depth = calculateToMeter(
                     float(self.entries[4].get()), self.pmenu[7].get)
-                perf_depth_err = calculateToMeter(
+                self.perf_depth_error = calculateToMeter(
                     float(self.entries[5].get()), self.pmenu[8].get)
-                perf_disp = 1 if not self.entries[9].get() else int(
+                self.perf_disp = 1 if not self.entries[9].get() else int(
                     self.entries[9].get())
-                max_disp = int(self.entries[10].get())
-                calibration = float(self.entries[11].get())
+                self.perf_disp_max = int(self.entries[10].get())
+                self.perf_disp_calibration_error = float(self.entries[11].get())
 
-                # baseline, min_depth, max_depth = self._baselineCalculator(
-                #     focal_length, max_depth, max_depth_error,
-                #     max_disparity, calibration_disparity_error,
-                #     min_disparity)
+                self._baselineCalculator()
 
-                self.results[1].set(round(baseline * 1000, 2))
-                self.results[2].set(round(min_depth * 100, 2))
-                self.results[3].set(round(max_depth * 1000, 2))
+                self.results[1].set(round(self._baseline * 1000, 2))
+                self.results[2].set(round(self._min_depth * 100, 2))
 
             if self.entries[10].get():
-                d_max = int(self.entries[10].get()) - 1
+                d_max = self.perf_disp_max - 1
                 depth_fov, depth_res = self._depthCalculator(
-                    img_width, img_height, roi_width_mm, roi_height_mm, img_width, d_max, f_mm)
+                    self.img_width, self.img_height, roi_width_mm,
+                    roi_height_mm, self.img_width, d_max, f_mm)
                 self.results[4].set(depth_res)
                 self.results[5].set(depth_fov)
 
