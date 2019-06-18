@@ -135,8 +135,8 @@ class StereoVisionCalculator(object):
         depth_units = ['mm', 'cm', 'm', 'in', 'ft']
         row_properties = [
             StereoVisionCalculator.Row('ui_sensor_size', 'Sensor size', True, False, sensor_size_units),
-            StereoVisionCalculator.Row('ui_image_width', 'Image width', True, False, 'px'),
-            StereoVisionCalculator.Row('ui_image_height', 'Image height', True, False, 'px'),
+            StereoVisionCalculator.Row('ui_img_width', 'Image width', True, False, 'px'),
+            StereoVisionCalculator.Row('ui_img_height', 'Image height', True, False, 'px'),
             StereoVisionCalculator.Row('ui_focal_fov', 'Focal FoV', True, False, fov_type),
             StereoVisionCalculator.Row('ui_perf_depth', 'Performance depth', True, False, depth_units),
             StereoVisionCalculator.Row('ui_perf_depth_error', 'Performance depth error', True, False, depth_units),
@@ -293,31 +293,34 @@ class StereoVisionCalculator(object):
 
     def _callback(self):
 
-        if (self.entries[0].get() and self.entries[1].get() and
-                self.entries[2].get() and self.entries[3].get()):
+        if (self.ui_sensor_size.io.get() and self.ui_img_width.io.get() and
+                self.ui_img_height.io.get() and self.ui_focal_fov.io.get()):
 
-            self.sensor_size = float(self.entries[0].get())
-            size = self.pmenu[0].get()
-            self.img_width = int(self.entries[1].get())
-            self.img_height = int(self.entries[2].get())
-            self.focal_fov = float(self.entries[3].get())
-            fov_type = self.pmenu[1].get()
+            self.sensor_size = float(self.ui_sensor_size.io.get())
+            size = self.ui_sensor_size.units.get()
+            self.img_width = int(self.ui_img_width.io.get())
+            self.img_height = int(self.ui_img_height.io.get())
+            self.focal_fov = float(self.ui_focal_fov.io.get())
+            fov_type = self.ui_focal_fov.units.get()
 
             f_mm, roi_width_mm, roi_height_mm = self._focalLengthCalculator(
                 size, fov_type)
-            self.results[0].set(round(f_mm, 2))
+            self.ui_focal_length.io["text"] = round(f_mm, 2)
 
-            if (self.entries[4].get() and self.entries[5].get() and
-                    self.entries[6].get() and self.entries[7].get() and
-                    self.entries[10].get()):
+            if (self.ui_perf_depth.io.get() and self.ui_perf_depth_error.io.get() and
+                    self.ui_disp_max.io.get() and
+                    self.ui_disp_cal_error.io.get()):
+
                 self.perf_depth = calculateToMeter(
-                    float(self.entries[4].get()), self.pmenu[7].get)
+                    float(self.ui_perf_depth.io.get()),
+                    self.ui_perf_depth.units.get)
                 self.perf_depth_error = calculateToMeter(
-                    float(self.entries[5].get()), self.pmenu[8].get)
-                self.perf_disp = 1 if not self.entries[9].get() else int(
-                    self.entries[9].get())
-                self.perf_disp_max = int(self.entries[10].get())
-                self.perf_disp_calibration_error = float(self.entries[11].get())
+                    float(self.ui_perf_depth_error.io.get()),
+                    self.ui_perf_depth_error.io.get)
+                self.perf_disp = 1 if not self.ui_perf_disp.io.get() else int(
+                    self.ui_perf_disp.io.get())
+                self.perf_disp_max = int(self.ui_disp_max.io.get())
+                self.perf_disp_calibration_error = float(self.ui_disp_cal_error.io.get())
 
                 self._baselineCalculator()
 
@@ -325,10 +328,10 @@ class StereoVisionCalculator(object):
                 depth_fov, depth_res = self._depthCalculator(
                     self.img_width, self.img_height, roi_width_mm,
                     roi_height_mm, self.img_width, d_max, f_mm)
-                self.results[1].set(round(self._baseline * 1000, 2))
-                self.results[2].set(round(self._min_depth * 100, 2))
-                self.results[4].set(depth_res)
-                self.results[5].set(depth_fov)
+                self.ui_baseline.io["text"] = round(self._baseline * 100, 2)
+                self.ui_depth_min.io["text"] = round(self._min_depth * 100, 2)
+                self.ui_depth_res.io["text"] = depth_res
+                self.ui_depth_fov.io["text"] = depth_fov
 
         if self.check[0].get():
             self.root.after(100, self._callback)
