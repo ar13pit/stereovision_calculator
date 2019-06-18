@@ -102,7 +102,7 @@ class StereoVisionCalculator(object):
         if row_prop.io:
             row.io = ttk.Entry(master)
         else:
-            row.io = ttk.Label(master)
+            row.io = ttk.Label(master, text="0.0")
         row.io.grid(column=1, sticky="W")
 
         if row_prop.activate:
@@ -113,7 +113,7 @@ class StereoVisionCalculator(object):
         if row_prop.units:
             if isinstance(row_prop.units, list):
                 row.units = ttk.OptionMenu(master, tk.StringVar(master,
-                    row_prop.units[0]), *row_prop.units)
+                    row_prop.units[1]), *row_prop.units)
             else:
                 row.units = tk.Label(master, text=row_prop.units)
 
@@ -130,9 +130,9 @@ class StereoVisionCalculator(object):
         self.root.title("StereoVision Calculator")
         self.root.resizable(0, 0)  # Don't allow resize
 
-        sensor_size_units = ['mm', 'in']
-        fov_type = ['Horizontal', 'Vertical', 'Diagonal']
-        depth_units = ['mm', 'cm', 'm', 'in', 'ft']
+        sensor_size_units = ['', 'mm', 'in']
+        fov_type = ['', 'Horizontal', 'Vertical', 'Diagonal']
+        depth_units = ['', 'mm', 'cm', 'm', 'in', 'ft']
         row_properties = [
             StereoVisionCalculator.Row('ui_sensor_size', 'Sensor size', True, False, sensor_size_units),
             StereoVisionCalculator.Row('ui_img_width', 'Image width', True, False, 'px'),
@@ -151,7 +151,6 @@ class StereoVisionCalculator(object):
             StereoVisionCalculator.Row('ui_depth_fov', 'Depth FoV', False, False, 'deg')
         ]
 
-        #self.rows = {}
         for row_num, rp in enumerate(row_properties, start=1):
             row_element = self._rowPropertiesToGUI(self.root, rp)
             row_element.setrow(row_num)
@@ -161,8 +160,8 @@ class StereoVisionCalculator(object):
         self.ui_perf_disp.io["width"] = 14
         self.ui_perf_disp.activate["command"] = self._disp
 
-#        self.results[4].set('0 x 0')
-#        self.results[5].set('0° x 0°')
+        self.ui_depth_res.io["text"] = "0 x 0"
+        self.ui_depth_fov.io["text"] = "0° x 0°"
 
 
         # Buttons
