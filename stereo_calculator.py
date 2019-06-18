@@ -221,10 +221,10 @@ class StereoVisionCalculator(object):
             self.sensor_size = self.sensor_size
 
         ratio = self.img_height / self.img_width
-        sensor_width_mm = math.sqrt(sensor_size * sensor_size /
-                                    (1.0 + ratio * ratio))
-        sensor_height_mm = math.sqrt(sensor_size * sensor_size /
-                                     (1.0 + 1.0 / (ratio * ratio)))
+        sensor_width_mm = math.sqrt(self.sensor_size ** 2 /
+                                    (1.0 + ratio ** 2))
+        sensor_height_mm = math.sqrt(self.sensor_size ** 2 /
+                                     (1.0 + 1.0 / (ratio ** 2)))
 
         roi_width_mm = sensor_width_mm  # * roi_width / img_width
         roi_height_mm = sensor_height_mm  # * roi_height / img_height
@@ -242,7 +242,7 @@ class StereoVisionCalculator(object):
             elif fov_type == 'Diagonal':
                 f_mm = roi_diagonal_mm / (2 * atanInner)
 
-            pixel_size_mm = roi_width_mm / img_width
+            pixel_size_mm = roi_width_mm / self.img_width
             self._focal_length = f_mm / pixel_size_mm
         except ZeroDivisionError:
             f_mm = 0
@@ -298,12 +298,10 @@ class StereoVisionCalculator(object):
 
             self.sensor_size = float(self.ui_sensor_size.io.get())
             size = self.ui_sensor_size.units["text"]
-            print("size", size)
             self.img_width = int(self.ui_img_width.io.get())
             self.img_height = int(self.ui_img_height.io.get())
             self.focal_fov = float(self.ui_focal_fov.io.get())
             fov_type = self.ui_focal_fov.units["text"]
-            print("fov", fov_type)
 
             f_mm, roi_width_mm, roi_height_mm = self._focalLengthCalculator(
                 size, fov_type)
