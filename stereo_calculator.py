@@ -98,7 +98,7 @@ class StereoVisionCalculator(object):
         if row_prop.io:
             row.io = ttk.Entry(master)
         else:
-            row.io = tk.StringVar(master)
+            row.io = ttk.Label(master)
         row.io.grid(column=1, sticky="W")
 
         # Create units Label/OptionMenu var
