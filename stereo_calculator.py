@@ -166,21 +166,28 @@ class StereoVisionCalculator(object):
 
 
         # Buttons
-        ttk.Checkbutton(self.root,
+        self.ui_auto_calculate = ttk.Checkbutton(self.root,
                         text="Auto calculate",
-                        command=self._callback).grid(row=0, sticky="W", pady=5)
-        ttk.Button(self.root,
+                        command=self._callback)
+        self.ui_auto_calculate.grid(row=0, sticky="W", pady=5)
+
+        self.ui_capture = ttk.Button(self.root,
                    text="Capture",
                    width=12,
-                   command=self._capture).grid(row=0, column=2, sticky="W")
-        ttk.Button(self.root,
+                   command=self._capture)
+        self.ui_capture.grid(row=0, column=2, sticky="W")
+
+        self.ui_calculate = ttk.Button(self.root,
                    text="Calculate",
                    width=12,
-                   command=self._callback).grid(row=16, sticky="W")
-        ttk.Button(self.root,
+                   command=self._callback)
+        self.ui_calculate.grid(row=16, sticky="W")
+
+        self.ui_plot = ttk.Button(self.root,
                    text="Plot",
                    width=12,
-                   command=self._plot).grid(row=16, column=2, sticky="W")
+                   command=self._plot)
+        self.ui_plot.grid(row=16, column=2, sticky="W")
 
 
         col_count, row_count = self.root.grid_size()
@@ -333,15 +340,14 @@ class StereoVisionCalculator(object):
                 self.ui_depth_res.io["text"] = depth_res
                 self.ui_depth_fov.io["text"] = depth_fov
 
-        if self.check[0].get():
+        if self.ui_auto_calculate.instate(["selected"]):
             self.root.after(100, self._callback)
 
     def _disp(self):
-        state = str(self.ui_perf_disp.io["state"])
-        if state == tk.NORMAL:
-            self.ui_perf_disp.io["state"] = tk.DISABLED
-        else:
+        if self.ui_perf_disp.activate.instate(["selected"]):
             self.ui_perf_disp.io["state"] = tk.NORMAL
+        else:
+            self.ui_perf_disp.io["state"] = tk.DISABLED
 
     def _capture(self):
         x1 = self.root.winfo_rootx()
