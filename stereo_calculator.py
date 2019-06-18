@@ -10,6 +10,7 @@ from matplotlib import style
 import math
 from collections import namedtuple
 
+
 def baselineCalculator(focal_length, disparity, depth):
     """
     Function to calculate the baseline (in m) of the stereo camera given:
@@ -19,6 +20,7 @@ def baselineCalculator(focal_length, disparity, depth):
     """
     return (disparity * depth / focal_length)
 
+
 def disparityToDepth(baseline, focal_length, disparity):
     """
     Function to calculate the Depth (in m) of a image point given:
@@ -26,7 +28,8 @@ def disparityToDepth(baseline, focal_length, disparity):
     :param: focal_length: The focal length of the system (in px)
     :param: disparity: Difference between the x pixels of both images (in px)
     """
-    return (baseline * focal_length /disparity)
+    return (baseline * focal_length / disparity)
+
 
 def depthToDisparity(baseline, focal_length, depth):
     """
@@ -35,7 +38,7 @@ def depthToDisparity(baseline, focal_length, depth):
     :param: focal_length: The focal length of the system (in px)
     :param: depth: Depth of the image point (in m)
     """
-    return (baseline * focal_length /depth)
+    return (baseline * focal_length / depth)
 
 
 class StereoVisionCalculator(object):
@@ -113,7 +116,7 @@ class StereoVisionCalculator(object):
         if row_prop.units:
             if isinstance(row_prop.units, list):
                 row.units = ttk.OptionMenu(master, tk.StringVar(master,
-                    row_prop.units[0]), *row_prop.units)
+                                           row_prop.units[0]), *row_prop.units)
             else:
                 row.units = tk.Label(master, text=row_prop.units)
 
@@ -151,7 +154,7 @@ class StereoVisionCalculator(object):
             StereoVisionCalculator.Row('ui_depth_fov', 'Depth FoV', False, False, 'deg')
         ]
 
-        #self.rows = {}
+        # self.rows = {}
         for row_num, rp in enumerate(row_properties, start=1):
             row_element = self._rowPropertiesToGUI(self.root, rp)
             row_element.setrow(row_num)
@@ -164,31 +167,29 @@ class StereoVisionCalculator(object):
 #        self.results[4].set('0 x 0')
 #        self.results[5].set('0° x 0°')
 
-
         # Buttons
         self.ui_auto_calculate = ttk.Checkbutton(self.root,
-                        text="Auto calculate",
-                        command=self._callback)
+                                                 text="Auto calculate",
+                                                 command=self._callback)
         self.ui_auto_calculate.grid(row=0, sticky="W", pady=5)
 
         self.ui_capture = ttk.Button(self.root,
-                   text="Capture",
-                   width=12,
-                   command=self._capture)
+                                     text="Capture",
+                                     width=12,
+                                     command=self._capture)
         self.ui_capture.grid(row=0, column=2, sticky="W")
 
         self.ui_calculate = ttk.Button(self.root,
-                   text="Calculate",
-                   width=12,
-                   command=self._callback)
+                                       text="Calculate",
+                                       width=12,
+                                       command=self._callback)
         self.ui_calculate.grid(row=16, sticky="W")
 
         self.ui_plot = ttk.Button(self.root,
-                   text="Plot",
-                   width=12,
-                   command=self._plot)
+                                  text="Plot",
+                                  width=12,
+                                  command=self._plot)
         self.ui_plot.grid(row=16, column=2, sticky="W")
-
 
         col_count, row_count = self.root.grid_size()
 
@@ -270,8 +271,7 @@ class StereoVisionCalculator(object):
         depth = self.perf_depth + self.perf_depth_error
 
         self._baseline = baselineCalculator(self._focal_length, disparity, depth)
-        self._min_depth = disparityToDepth(self._baseline, self._focal_length,
-                self.perf_disp_max)
+        self._min_depth = disparityToDepth(self._baseline, self._focal_length, self.perf_disp_max)
 
     def _depthErrorCalculator(self, depth):
         """
@@ -280,12 +280,10 @@ class StereoVisionCalculator(object):
         :param: depth
         :return: max_depth_error
         """
-        disparity_real = depthToDisparity(self._baseline, self._focal_length,
-                depth)
+        disparity_real = depthToDisparity(self._baseline, self._focal_length, depth)
         disparity_measured = disparity_real + self.perf_disp_calibration_error
 
-        depth_measured = disparityToDepth(self._baseline, self._focal_length,
-                disparity_measured)
+        depth_measured = disparityToDepth(self._baseline, self._focal_length, disparity_measured)
         return abs(depth_measured - depth)
 
     def _depthCalculator(self, roi_width, roi_height, roi_width_mm, roi_height_mm, img_width, d_max, f_mm):
