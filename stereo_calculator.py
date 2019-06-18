@@ -66,7 +66,7 @@ class StereoVisionCalculator(object):
         # Initialize the complete GUI
         self._initializeGUI()
 
-    Row = namedtuple('Row', ['name', 'io', 'activate', 'units'])
+    Row = namedtuple('Row', ['var_name', 'name', 'io', 'activate', 'units'])
 
     class RowElement(object):
         def __init__(self):
@@ -76,10 +76,14 @@ class StereoVisionCalculator(object):
             self.units = None
 
         def setrow(self, row):
-            self.name.grid(row=row)
-            self.io.grid(row=row)
-            self.activate.grid(row=row)
-            self.units.grid(row=row)
+            if self.name:
+                self.name.grid(row=row)
+            if self.io:
+                self.io.grid(row=row)
+            if self.activate:
+                self.activate.grid(row=row)
+            if self.units:
+                self.units.grid(row=row)
 
     def _rowPropertiesToGUI(self, master, row_prop):
         """
@@ -88,7 +92,7 @@ class StereoVisionCalculator(object):
         :param: row_prop (An instance of Row())
         :return: An instance of RowElement
         """
-        row = RowElement()
+        row = StereoVisionCalculator.RowElement()
 
         # Create the name label
         row.name = ttk.Label(master, text=row_prop.name)
@@ -100,6 +104,10 @@ class StereoVisionCalculator(object):
         else:
             row.io = ttk.Label(master)
         row.io.grid(column=1, sticky="W")
+
+        if row_prop.activate:
+            row.activate = ttk.Checkbutton(master)
+            row.activate.grid(column=1, sticky="E")
 
         # Create units Label/OptionMenu var
         if row_prop.units:
@@ -126,75 +134,41 @@ class StereoVisionCalculator(object):
         fov_type = ['Horizontal', 'Vertical', 'Diagonal']
         depth_units = ['mm', 'cm', 'm', 'in', 'ft']
         row_properties = [
-            Row('Sensor size', True, False, sensor_size_units),
-            Row('Resolution width', True, False, 'px'),
-            Row('Resolution height', True, False, 'px'),
-            Row('Focal FoV', True, False, fov_type),
-            Row('Performance depth', True, False, depth_units),
-            Row('Performance depth error', True, False, depth_units),
-            Row('Performance disparity', True, True, 'px'),
-            Row('Max disparity', True, False, 'px'),
-            Row('Calibration disparity error', True, False, 'px'),
-            Row('Focal length', False, False, 'mm'),
-            Row('Baseline', False, False, 'cm'),
-            Row('Min depth', False, False, 'm'),
-            Row('Max depth', False, False, 'm'),
-            Row('Depth resolution', False, False, 'px'),
-            Row('Depth FoV', False, False, 'deg')
+            StereoVisionCalculator.Row('ui_sensor_size', 'Sensor size', True, False, sensor_size_units),
+            StereoVisionCalculator.Row('ui_image_width', 'Image width', True, False, 'px'),
+            StereoVisionCalculator.Row('ui_image_height', 'Image height', True, False, 'px'),
+            StereoVisionCalculator.Row('ui_focal_fov', 'Focal FoV', True, False, fov_type),
+            StereoVisionCalculator.Row('ui_perf_depth', 'Performance depth', True, False, depth_units),
+            StereoVisionCalculator.Row('ui_perf_depth_error', 'Performance depth error', True, False, depth_units),
+            StereoVisionCalculator.Row('ui_perf_disp', 'Performance disparity', True, True, 'px'),
+            StereoVisionCalculator.Row('ui_disp_max', 'Max disparity', True, False, 'px'),
+            StereoVisionCalculator.Row('ui_disp_cal_error', 'Calibration disparity error', True, False, 'px'),
+            StereoVisionCalculator.Row('ui_focal_length', 'Focal length', False, False, 'mm'),
+            StereoVisionCalculator.Row('ui_baseline', 'Baseline', False, False, 'cm'),
+            StereoVisionCalculator.Row('ui_depth_min', 'Min depth', False, False, 'm'),
+            StereoVisionCalculator.Row('ui_depth_max', 'Max depth', False, False, 'm'),
+            StereoVisionCalculator.Row('ui_depth_res', 'Depth resolution', False, False, 'px'),
+            StereoVisionCalculator.Row('ui_depth_fov', 'Depth FoV', False, False, 'deg')
         ]
 
-        self.check = [tk.IntVar(self.root) for _ in range(2)]  # Checkboxes
-        self.pmenu = [tk.StringVar(self.root) for _ in range(4)]  # Popup menus
-        self.results = [tk.DoubleVar(self.root) for _ in range(6)]  # Results
-        self.entries = [ttk.Entry(self.root) for _ in range(9)]  # Entries
-        self.entries[6]["state"] = "disabled"
-        self.entries[6]["width"] = 14
+        #self.rows = {}
+        for row_num, rp in enumerate(row_properties, start=1):
+            row_element = self._rowPropertiesToGUI(self.root, rp)
+            row_element.setrow(row_num)
+            self.__setattr__(rp.var_name, row_element)
 
-        self.results[4].set('0 x 0')
-        self.results[5].set('0° x 0°')
+        self.ui_perf_disp.io["state"] = tk.DISABLED
+        self.ui_perf_disp.io["width"] = 14
+        self.ui_perf_disp.activate["command"] = self._disp
 
-        # Entries
-        for row, entry in enumerate(self.entries, start=1):
-            entry.grid(row=row, column=1, sticky="W")
+#        self.results[4].set('0 x 0')
+#        self.results[5].set('0° x 0°')
 
-        labels = {
-            'Sensor size': '',
-            'Resolution width': 'pixels',
-            'Resolution height': 'pixels',
-            'Focal FoV': '',
-            'Performance depth': '',
-            'Performance depth error': '',
-            'Performance disparity': 'pixels',
-            'Max disparity': 'pixels',
-            'Calibration disparity error': 'pixel',
-            'Focal length': 'mm',
-            'Baseline': 'mm',
-            'Min depth': 'cm',
-            'Max depth': 'm',
-            'Depth resolution': 'pixels',
-            'Depth FoV': 'deg'
-        }
-
-        for x, (val, key) in enumerate(labels.items()):
-            l = ttk.Label()
-            l.master = self.root
-            l["text"] = val
-            l.grid(row=x+1, sticky="W", pady=5)
-            #ttk.Label(self.root, text=val).grid(
-            #    row=x + 1, sticky="W", pady=5)
-            if key:
-                ttk.Label(self.root, text=key).grid(
-                    row=x + 1, column=2, sticky="W")
 
         # Buttons
         ttk.Checkbutton(self.root,
                         text="Auto calculate",
-                        variable=self.check[0],
                         command=self._callback).grid(row=0, sticky="W", pady=5)
-        ttk.Checkbutton(self.root,
-                        text="",
-                        variable=self.check[1],
-                        command=self._disp).grid(row=7, column=1, sticky="E")
         ttk.Button(self.root,
                    text="Capture",
                    width=12,
@@ -208,30 +182,6 @@ class StereoVisionCalculator(object):
                    width=12,
                    command=self._plot).grid(row=16, column=2, sticky="W")
 
-        # Dropdown menus
-        choices1 = {'', 'mm', 'in'}
-        choices2 = {'', 'Horizontal', 'Vertical', 'Diagonal'}
-        choices3 = {'', 'mm', 'cm', 'm', 'in', 'ft'}
-        self.popupMenu = []
-        for x in range(0, 4):
-            if x == 0:
-                choices = choices1
-                self.pmenu[x].set('mm')
-                a = 1
-            elif x == 1:
-                choices = choices2
-                self.pmenu[x].set('Horizontal')
-                a = 3
-            else:
-                choices = choices3
-                self.pmenu[x].set('mm')
-            self.popupMenu.append(ttk.OptionMenu(self.root, self.pmenu[x], *choices))
-            self.popupMenu[x].grid(row=x + a, column=2, sticky="W")
-
-        # Results
-        for x in range(0, len(self.results)):
-            ttk.Label(self.root, textvariable=self.results[x]).grid(
-                row=x + 10, column=1, sticky="W")
 
         col_count, row_count = self.root.grid_size()
 
@@ -384,10 +334,11 @@ class StereoVisionCalculator(object):
             self.root.after(100, self._callback)
 
     def _disp(self):
-        if self.check[1].get():
-            self.entries[6]["state"] = "normal"
+        state = str(self.ui_perf_disp.io["state"])
+        if state == tk.NORMAL:
+            self.ui_perf_disp.io["state"] = tk.DISABLED
         else:
-            self.entries[6]["state"] = "disabled"
+            self.ui_perf_disp.io["state"] = tk.NORMAL
 
     def _capture(self):
         x1 = self.root.winfo_rootx()
