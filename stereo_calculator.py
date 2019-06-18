@@ -115,8 +115,7 @@ class StereoVisionCalculator(object):
         # Create units Label/OptionMenu var
         if row_prop.units:
             if isinstance(row_prop.units, list):
-                row.units = ttk.OptionMenu(master, tk.StringVar(master,
-                    row_prop.units[1]), *row_prop.units)
+                row.units = ttk.OptionMenu(master, tk.StringVar(master, row_prop.units[1]), *row_prop.units)
             else:
                 row.units = tk.Label(master, text=row_prop.units)
 
@@ -148,8 +147,8 @@ class StereoVisionCalculator(object):
             StereoVisionCalculator.Row('ui_disp_cal_error', 'Calibration disparity error', True, False, 'px'),
             StereoVisionCalculator.Row('ui_focal_length', 'Focal length', False, False, 'mm'),
             StereoVisionCalculator.Row('ui_baseline', 'Baseline', False, False, 'cm'),
-            StereoVisionCalculator.Row('ui_depth_min', 'Min depth', False, False, 'm'),
-            StereoVisionCalculator.Row('ui_depth_max', 'Max depth', False, False, 'm'),
+            StereoVisionCalculator.Row('ui_depth_min', 'Min depth', False, False, 'cm'),
+            # StereoVisionCalculator.Row('ui_depth_max', 'Max depth', False, False, 'm'),
             StereoVisionCalculator.Row('ui_depth_res', 'Depth resolution', False, False, 'px'),
             StereoVisionCalculator.Row('ui_depth_fov', 'Depth FoV', False, False, 'deg')
         ]
@@ -199,6 +198,7 @@ class StereoVisionCalculator(object):
         self.root.mainloop()
 
     def calculateToMeter(self, variable, conversion_from):
+        result = 0
         if conversion_from is "mm":
             result = variable / 1000
         elif conversion_from is "cm":
@@ -315,10 +315,10 @@ class StereoVisionCalculator(object):
                     self.ui_disp_max.io.get() and
                     self.ui_disp_cal_error.io.get()):
 
-                self.perf_depth = calculateToMeter(
+                self.perf_depth = self.calculateToMeter(
                     float(self.ui_perf_depth.io.get()),
                     self.ui_perf_depth.units["text"])
-                self.perf_depth_error = calculateToMeter(
+                self.perf_depth_error = self.calculateToMeter(
                     float(self.ui_perf_depth_error.io.get()),
                     self.ui_perf_depth_error.units["text"])
                 self.perf_disp = 1 if not self.ui_perf_disp.io.get() else int(
@@ -381,7 +381,8 @@ class StereoVisionCalculator(object):
 
         # Plot
         # Min range to max range
-        for x in range(1, 1000):
+        max_depth = self._baseline * self._focal_length * 10
+        for x in range(int(self._min_depth * 10), int(max_depth)):
             y = self._depthErrorCalculator(float(x / 10))
             x1.append(float(x / 10))
             y1.append(y)
