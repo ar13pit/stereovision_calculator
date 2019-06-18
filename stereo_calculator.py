@@ -8,7 +8,7 @@ from pyscreenshot import grab
 import matplotlib.pyplot as plt
 from matplotlib import style
 import math
-
+from collections import namedtuple
 
 def baselineCalculator(focal_length, disparity, depth):
     """
@@ -36,6 +36,8 @@ def depthToDisparity(baseline, focal_length, depth):
     :param: depth: Depth of the image point (in m)
     """
     return (baseline * focal_length /depth)
+
+Row = namedtuple('Row', ['name', 'io', 'activate', 'units'])
 
 class StereoVisionCalculator(object):
     def __init__(self):
@@ -74,6 +76,23 @@ class StereoVisionCalculator(object):
         self.root.title("StereoVision Calculator")
         self.root.resizable(0, 0)  # Don't allow resize
 
+        row_properties = [
+            Row('Sensor size', True, False, None),
+            Row('Resolution width', True, False, 'px'),
+            Row('Resolution height', True, False, 'px'),
+            Row('Focal FoV', True, False, None),
+            Row('Performance depth', True, False, None),
+            Row('Performance depth error', True, False, None),
+            Row('Performance disparity', True, True, 'px'),
+            Row('Max disparity', True, False, 'px'),
+            Row('Calibration disparity error', True, False, 'px'),
+            Row('Focal length', False, False, 'mm'),
+            Row('Baseline', False, False, 'cm'),
+            Row('Min depth', False, False, 'm'),
+            Row('Max depth', False, False, 'm'),
+            Row('Depth resolution', False, False, 'px'),
+            Row('Depth FoV', False, False, 'deg')
+        ]
         self.check = [tk.IntVar(self.root) for _ in range(2)]  # Checkboxes
         self.pmenu = [tk.StringVar(self.root) for _ in range(4)]  # Popup menus
         self.results = [tk.DoubleVar(self.root) for _ in range(6)]  # Results
@@ -107,8 +126,12 @@ class StereoVisionCalculator(object):
         }
 
         for x, (val, key) in enumerate(labels.items()):
-            ttk.Label(self.root, text=val).grid(
-                row=x + 1, sticky="W", pady=5)
+            l = ttk.Label()
+            l.master = self.root
+            l["text"] = val
+            l.grid(row=x+1, sticky="W", pady=5)
+            #ttk.Label(self.root, text=val).grid(
+            #    row=x + 1, sticky="W", pady=5)
             if key:
                 ttk.Label(self.root, text=key).grid(
                     row=x + 1, column=2, sticky="W")
