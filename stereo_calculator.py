@@ -37,7 +37,6 @@ def depthToDisparity(baseline, focal_length, depth):
     """
     return (baseline * focal_length /depth)
 
-Row = namedtuple('Row', ['name', 'io', 'activate', 'units'])
 
 class StereoVisionCalculator(object):
     def __init__(self):
@@ -67,6 +66,53 @@ class StereoVisionCalculator(object):
         # Initialize the complete GUI
         self._initializeGUI()
 
+    Row = namedtuple('Row', ['name', 'io', 'activate', 'units'])
+
+    class RowElement(object):
+        def __init__(self):
+            self.name = None
+            self.io = None
+            self.activate = None
+            self.units = None
+
+        def setrow(self, row):
+            self.name.grid(row=row)
+            self.io.grid(row=row)
+            self.activate.grid(row=row)
+            self.units.grid(row=row)
+
+    def _rowPropertiesToGUI(self, master, row_prop):
+        """
+        Method to convert row_prop of type Row() into a GUI element
+        :param: master (The master of tk element)
+        :param: row_prop (An instance of Row())
+        :return: An instance of RowElement
+        """
+        row = RowElement()
+
+        # Create the name label
+        row.name = ttk.Label(master, text=row_prop.name)
+        row.name.grid(column=0, sticky="W", pady=5)
+
+        # Create io Entry var
+        if row_prop.io:
+            row.io = ttk.Entry(master)
+        else:
+            row.io = tk.StringVar(master)
+        row.io.grid(column=1, sticky="W")
+
+        # Create units Label/OptionMenu var
+        if row_prop.units:
+            if isinstance(row_prop.units, list):
+                row.units = ttk.OptionMenu(master, tk.StringVar(master,
+                    row_prop.units[0]), *row_prop.units)
+            else:
+                row.units = tk.Label(master, text=row_prop.units)
+
+            row.units.grid(column=2, sticky="W")
+
+        return row
+
     def _initializeGUI(self):
         """
         Method to setup the StereoVision Calculator GUI using tkinter
@@ -76,13 +122,16 @@ class StereoVisionCalculator(object):
         self.root.title("StereoVision Calculator")
         self.root.resizable(0, 0)  # Don't allow resize
 
+        sensor_size_units = ['mm', 'in']
+        fov_type = ['Horizontal', 'Vertical', 'Diagonal']
+        depth_units = ['mm', 'cm', 'm', 'in', 'ft']
         row_properties = [
-            Row('Sensor size', True, False, None),
+            Row('Sensor size', True, False, sensor_size_units),
             Row('Resolution width', True, False, 'px'),
             Row('Resolution height', True, False, 'px'),
-            Row('Focal FoV', True, False, None),
-            Row('Performance depth', True, False, None),
-            Row('Performance depth error', True, False, None),
+            Row('Focal FoV', True, False, fov_type),
+            Row('Performance depth', True, False, depth_units),
+            Row('Performance depth error', True, False, depth_units),
             Row('Performance disparity', True, True, 'px'),
             Row('Max disparity', True, False, 'px'),
             Row('Calibration disparity error', True, False, 'px'),
@@ -93,6 +142,7 @@ class StereoVisionCalculator(object):
             Row('Depth resolution', False, False, 'px'),
             Row('Depth FoV', False, False, 'deg')
         ]
+
         self.check = [tk.IntVar(self.root) for _ in range(2)]  # Checkboxes
         self.pmenu = [tk.StringVar(self.root) for _ in range(4)]  # Popup menus
         self.results = [tk.DoubleVar(self.root) for _ in range(6)]  # Results
