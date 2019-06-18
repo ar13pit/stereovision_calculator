@@ -297,11 +297,13 @@ class StereoVisionCalculator(object):
                 self.ui_img_height.io.get() and self.ui_focal_fov.io.get()):
 
             self.sensor_size = float(self.ui_sensor_size.io.get())
-            size = self.ui_sensor_size.units.get()
+            size = self.ui_sensor_size.units["text"]
+            print("size", size)
             self.img_width = int(self.ui_img_width.io.get())
             self.img_height = int(self.ui_img_height.io.get())
             self.focal_fov = float(self.ui_focal_fov.io.get())
-            fov_type = self.ui_focal_fov.units.get()
+            fov_type = self.ui_focal_fov.units["text"]
+            print("fov", fov_type)
 
             f_mm, roi_width_mm, roi_height_mm = self._focalLengthCalculator(
                 size, fov_type)
@@ -313,10 +315,10 @@ class StereoVisionCalculator(object):
 
                 self.perf_depth = calculateToMeter(
                     float(self.ui_perf_depth.io.get()),
-                    self.ui_perf_depth.units.get)
+                    self.ui_perf_depth.units["text"])
                 self.perf_depth_error = calculateToMeter(
                     float(self.ui_perf_depth_error.io.get()),
-                    self.ui_perf_depth_error.io.get)
+                    self.ui_perf_depth_error.units["text"])
                 self.perf_disp = 1 if not self.ui_perf_disp.io.get() else int(
                     self.ui_perf_disp.io.get())
                 self.perf_disp_max = int(self.ui_disp_max.io.get())
