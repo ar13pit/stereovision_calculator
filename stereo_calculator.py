@@ -146,8 +146,8 @@ class StereoVisionCalculator(object):
             StereoVisionCalculator.Row('ui_disp_max', 'Max disparity', True, False, 'px'),
             StereoVisionCalculator.Row('ui_disp_cal_error', 'Calibration disparity error', True, False, 'px'),
             StereoVisionCalculator.Row('ui_focal_length', 'Focal length', False, False, 'mm'),
-            StereoVisionCalculator.Row('ui_baseline', 'Baseline', False, False, 'cm'),
-            StereoVisionCalculator.Row('ui_depth_min', 'Min depth', False, False, 'cm'),
+            StereoVisionCalculator.Row('ui_baseline', 'Baseline', False, False, 'mm'),
+            StereoVisionCalculator.Row('ui_depth_min', 'Min depth', False, False, 'mm'),
             # StereoVisionCalculator.Row('ui_depth_max', 'Max depth', False, False, 'm'),
             StereoVisionCalculator.Row('ui_depth_res', 'Depth resolution', False, False, 'px'),
             StereoVisionCalculator.Row('ui_depth_fov', 'Depth FoV', False, False, 'deg')
@@ -267,7 +267,7 @@ class StereoVisionCalculator(object):
             5. Calibration disparity error
         """
         disparity = self.perf_disp + self.perf_disp_calibration_error
-        depth = self.perf_depth + self.perf_depth_error
+        depth = self.perf_depth - self.perf_depth_error
 
         self._baseline = baselineCalculator(self._focal_length, disparity, depth)
         self._min_depth = disparityToDepth(self._baseline, self._focal_length, self.perf_disp_max)
@@ -332,8 +332,8 @@ class StereoVisionCalculator(object):
                 depth_fov, depth_res = self._depthCalculator(
                     self.img_width, self.img_height, roi_width_mm,
                     roi_height_mm, self.img_width, d_max, f_mm)
-                self.ui_baseline.io["text"] = round(self._baseline * 100, 2)
-                self.ui_depth_min.io["text"] = round(self._min_depth * 100, 2)
+                self.ui_baseline.io["text"] = round(self._baseline * 1000, 2)
+                self.ui_depth_min.io["text"] = round(self._min_depth * 1000, 2)
                 self.ui_depth_res.io["text"] = depth_res
                 self.ui_depth_fov.io["text"] = depth_fov
 
@@ -357,41 +357,47 @@ class StereoVisionCalculator(object):
 
     def _plot(self):
         # Parameters
-        style.use('seaborn-whitegrid')
-        fig1, ax = plt.subplots()
-        fig1.canvas.set_window_title('Plot')
-        plt.title("Depth Error Chart")
-        plt.xlabel("Depth (m)")
-        plt.ylabel("Depth error (cm)")
-        x1 = []
-        y1 = []
+        if not (self._focal_length and self._baseline and self._min_depth):
+            self.error = ThemedTk(theme="arc")
+            self.error.tk_setPalette(background='#f5f6f7')
+            self.error.title("Error!")
+            label = ttk.Label(self.error, text="Missing input variables!").grid(padx=15, pady=25)
+            self.error.mainloop()
+        else:
+            style.use('seaborn-whitegrid')
+            fig1, ax = plt.subplots()
+            fig1.canvas.set_window_title('Plot')
+            plt.title("Depth Error Chart")
+            plt.xlabel("Depth (m)")
+            plt.ylabel("Depth error (m)")
+            x1 = []
+            y1 = []
 
-        # Light theme
-        fig1.patch.set_facecolor('#f5f6f7')  # 212121 Dark
-        ax.patch.set_facecolor('#f5f6f7')
-        ax.spines['bottom'].set_color('#5c616c')  # FAFAFA Dark
-        ax.spines['top'].set_color('#5c616c')
-        ax.spines['right'].set_color('#5c616c')
-        ax.spines['left'].set_color('#5c616c')
-        ax.tick_params(axis='x', colors='#5c616c', which='both')
-        ax.tick_params(axis='y', colors='#5c616c', which='both')
-        ax.yaxis.label.set_color('#5c616c')
-        ax.xaxis.label.set_color('#5c616c')
-        ax.title.set_color('#5c616c')
+            # Light theme
+            fig1.patch.set_facecolor('#f5f6f7')  # 212121 Dark
+            ax.patch.set_facecolor('#f5f6f7')
+            ax.spines['bottom'].set_color('#5c616c')  # FAFAFA Dark
+            ax.spines['top'].set_color('#5c616c')
+            ax.spines['right'].set_color('#5c616c')
+            ax.spines['left'].set_color('#5c616c')
+            ax.tick_params(axis='x', colors='#5c616c', which='both')
+            ax.tick_params(axis='y', colors='#5c616c', which='both')
+            ax.yaxis.label.set_color('#5c616c')
+            ax.xaxis.label.set_color('#5c616c')
+            ax.title.set_color('#5c616c')
 
-        # Plot
-        # Min range to max range
-        max_depth = self._baseline * self._focal_length * 10
-        for x in range(int(self._min_depth * 10), int(max_depth)):
-            y = self._depthErrorCalculator(float(x / 10))
-            x1.append(float(x / 10))
-            y1.append(y)
+            # Plot
+            # Min range to max range
+            max_depth = self._baseline * self._focal_length * 10
+            for x in range(int(self._min_depth * 10), int(max_depth)):
+                y = self._depthErrorCalculator(float(x / 10))
+                x1.append(float(x / 10))
+                y1.append(y)
 
-        plt.plot(x1, y1, color="#039BE5")
-        plt.legend(['Error'], loc='upper left')
+            plt.plot(x1, y1, color="#039BE5")
 
-        # Show
-        plt.show()
+            # Show
+            plt.show()
 
 
 if __name__ == "__main__":
